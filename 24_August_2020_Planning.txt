@@ -1,0 +1,28 @@
+I am done trying to learn someone else's text box and dialogue system. I'm going to make my own. I don't care about being efficient with my time. I like coding things.
+
+So, we're going to make our own text box system for game maker. Note that we're just making the text boxes right now. Not a dialogue system. Our text boxes will have:
+
+typing effect
+random shake effect
+wavey effect
+typing chirps
+
+And maybe some other stuff. Something I'm thinking about is maybe this should literally just be text. Originally I thought about adding character portraits. Perhaps we'll leave that out for now. 
+
+We need to consider how we're going to achieve certain effects. Especially the wavey effect. Based on previous attempts at doing this, we should probably store data for individual characters. The data for effects will likely have to be declared at textbox creation. Just so our thoughts make more sense, let's get some pseudo code going:
+
+I think we should use structs for our text. Each struct is for a character. It will look something like this:
+
+character = {
+	x: 0, // the location of the character on screen
+	y: 0,
+	effect: effect_enum,
+	color: color,
+	font: font,
+	scale: 1
+	update: function update()
+}
+
+I'm not sure about the exact members and methods yet. The most important values are the x/y coordinates. These will determine where to draw the character in the text box. For our typing effect, we'll likely have an array of these character structs, and characters are only drawn if the typing index has reached them. The update function could be called on all characters in the textbox, and adjust their position as needed. This would only be important for a few effects, like wavey and shake, but I don't see how else to do those effects.
+
+
