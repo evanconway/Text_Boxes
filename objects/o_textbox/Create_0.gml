@@ -13,12 +13,46 @@ color_default = undefined;
 typing_rate = 0.3; // rate of 1 means typing increments once each frame
 typing_increment = 2; // how far to increase cursor each increment
 autoupdate = true;
-width = 200;
+width = 500;
 height = 70;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text) {
+	characters = generate_lines(text);
+	var _x = 0;
+	var _y = 0;
+	for (var i = 0; i < array_length(characters); i++) {
+		var new_y = 0;
+		_x = 0;
+		for (var k = 0; k < array_length(characters[i]); k++) {
+			characters[i][k].char_x = _x;
+			characters[i][k].char_y = _y;
+			_x += characters[i][k].width;
+			if (characters[i][k].height > new_y) new_y = characters[i][k].height;
+		}
+		_y += new_y;
+	}
+}
 
+/// @desc Create array of lines.
+function generate_lines(text) {
+	var words = generate_words(text);
+	var lines = [];
+	var lines_i = 0;
+	var line = []; // a line is an array of chars, not words
+	var line_i = 0;
+	for (var i = 0; i < array_length(words); i++) {
+		var word = words[i];
+		var word_width = get_char_array_width(word);
+		var line_width = get_char_array_width(line);
+		if (line_width + word_width > width) {
+			if (array_length(line) == 0) show_error("Textbox width too small for given words!", true);
+			lines[lines_i++] = line;
+			line = word;
+			line_i = array_length(word);
+		} else for (var w = 0; w < array_length(word); w++) line[line_i++] = word[w];
+	}
+	return lines;
 }
 
 /// @desc Create array of "words", or char arrays.
