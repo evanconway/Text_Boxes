@@ -1,9 +1,6 @@
 /// @desc Create textbox character.
-/// @param character
-/// @param font
-/// @param color
-/// @param *effect
-function tb_character(c, f, r, e) constructor {
+/// @func tb_character(character, font, color, *effect)
+function tb_character(c, f, r) constructor {
 	character = c;
 	font = f;
 	char_color = r;
@@ -12,7 +9,8 @@ function tb_character(c, f, r, e) constructor {
 	height = string_height(character);
 	char_x = 0;
 	char_y = 0;
-	effect = 
+	effect = undefined;
+	if (argument_count > 3) effect = argument[3];
 	update = function() {
 		
 	}
