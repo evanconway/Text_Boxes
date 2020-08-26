@@ -6,8 +6,8 @@ typed. We do not use the term "column" because not all chars are the same width,
 does not apply. */
 
 characters = undefined; // character array
-cursor_row = 0;
-cursor_char = 0;
+cursor_row = -1;
+cursor_char = -1;
 font_default = undefined;
 color_default = undefined;
 typing_rate = 0.3; // rate of 1 means typing increments once each frame
@@ -41,6 +41,7 @@ function generate_words(text) {
 			words[words_i++] = [char];
 		} else word[word_i++] = char;
 	}
+	words[words_i] = word;
 	return words;
 }
 
@@ -55,8 +56,8 @@ function generate_chars(text) {
 	var param_mode = 0; // 0 for detect param, 1 for detect value
 	var param_detect = "";
 	var value_detect = "";
-	for (var i = 0; i < string_length(text); i++) {
-		var c = text[i];
+	for (var i = 1; i <= string_length(text); i++) { // recall that strings are 1 based in gml
+		var c = string_char_at(text, i);
 		if (mode == 0) {
 			if (c == "<") { // detect start of param tag
 				param_mode = 0;
@@ -84,6 +85,7 @@ function generate_chars(text) {
 			}
 		}
 	}
+	return chars
 }
 
 /// @desc Return the pixel width of the given character array

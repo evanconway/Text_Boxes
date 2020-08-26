@@ -4,14 +4,14 @@ function tb_character(c, f, r) constructor {
 	character = c;
 	font = f;
 	char_color = r;
-	draw_set_font(font);
+	if (font != undefined) draw_set_font(font);
 	width = string_width(character);
 	height = string_height(character);
 	char_x = 0;
 	char_y = 0;
 	effect = undefined;
 	if (argument_count > 3) effect = argument[3];
-	update = function() {
+	function update() {
 		
 	}
 }
