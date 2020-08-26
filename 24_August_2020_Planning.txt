@@ -25,4 +25,14 @@ character = {
 
 I'm not sure about the exact members and methods yet. The most important values are the x/y coordinates. These will determine where to draw the character in the text box. For our typing effect, we'll likely have an array of these character structs, and characters are only drawn if the typing index has reached them. The update function could be called on all characters in the textbox, and adjust their position as needed. This would only be important for a few effects, like wavey and shake, but I don't see how else to do those effects.
 
+Why don't we take some time to describe what features we want our text boxes to have. This could get messy because there are lots of different situations we could want to use a textbox. The most important one obviously is the rpg style dialogue box that appears at the bottom of the screen. But maybe we also want to be able to place it other places. Maybe we want to have extreme control over how the border looks? Does it have portrait support? What if we want text boxes in the game world. 
+
+If all we want is a simple rpg style display at bottom text box, then we should design this to work through some global scripts. We should be able to set the text. Tell the box to open. Tell it to close. That sort of thing. Actually, I don't see why the same functions that work in global scope couldn't work for individual textboxes. Perhaps there's some way to design it so that textbox GM object has all these methods. But we also declare some global scripts that create a global textbox with the same functionality. Yes, I think that's the way to do it. Let's write the names of some functions we think we'll need:
+
+text_set
+open
+close
+typing_start // probably won't need to control typing that much. 
+typing_pause
+typing_reset
 
