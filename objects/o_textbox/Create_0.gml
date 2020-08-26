@@ -21,10 +21,33 @@ function set_text(text) {
 
 }
 
+/// @desc Create array of "words", or char arrays.
+function generate_words(text) {
+	var chars = generate_chars(text);
+	var words = [];
+	var words_i = 0;
+	
+	var word = [];
+	var word_i = 0;
+	
+	for (var i = 0; i < array_length(chars); i++) {
+		var char = chars[i];
+		if (char.character == " ") {
+			if (array_length(word) > 0) {
+				words[words_i++] = word;
+				word = [];
+				word_i = 0;
+			}
+			words[words_i++] = [char];
+		} else word[word_i++] = char;
+	}
+	return words;
+}
+
 /// @desc Create an array of chars from text with effects parsed.
 function generate_chars(text) {
-	chars = [];
-	char_i = 0;
+	var chars = [];
+	var char_i = 0;
 	var mode = 0; // 0 for parsing text, 1 for parsing effects
 	var effect = undefined;
 	var color = color_default;
