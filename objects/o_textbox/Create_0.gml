@@ -15,6 +15,7 @@ typing_increment = 2; // how far to increase cursor each increment
 autoupdate = true;
 width = 500;
 height = 70;
+alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text) {
@@ -52,20 +53,34 @@ function generate_lines(text) {
 			line_i = array_length(word);
 		} else for (var w = 0; w < array_length(word); w++) line[line_i++] = word[w];
 	}
+	
+	/* Here, we remove spaces from the ends of lines depending on the text alignment of the box. */
+	if (alignment == TB_ALIGN.LEFT) {
+		for (var i = 0; i < array_length(lines); i++) {
+			
+		}
+	}
+	if (alignment == TB_ALIGN.RIGHT) {
+		
+	}
+	if (alignment == TB_ALIGN.CENTER) {
+		
+	}
+	
 	return lines;
 }
 
 /// @desc Create array of "words", or char arrays.
 function generate_words(text) {
-	var chars = generate_chars(text);
+	var list = generate_chars(text); // recall this is linked list
 	var words = [];
 	var words_i = 0;
 	
 	var word = [];
 	var word_i = 0;
 	
-	for (var i = 0; i < array_length(chars); i++) {
-		var char = chars[i];
+	while (list != undefined) {
+		var char = list.data;
 		if (char.character == " ") {
 			if (array_length(word) > 0) {
 				words[words_i++] = word;
@@ -74,15 +89,20 @@ function generate_words(text) {
 			}
 			words[words_i++] = [char];
 		} else word[word_i++] = char;
+		list = list.next;
 	}
 	words[words_i] = word;
 	return words;
 }
 
-/// @desc Create an array of chars from text with effects parsed.
+/// @desc Create a linked list of chars from text with effects parsed.
 function generate_chars(text) {
-	var chars = [];
-	var char_i = 0;
+	
+	var head = {
+		data: undefined,
+		next: undefined
+	};
+	var tail = head;
 	var mode = 0; // 0 for parsing text, 1 for parsing effects
 	var effect = undefined;
 	var color = color_default;
@@ -98,7 +118,19 @@ function generate_chars(text) {
 				param_detect = "";
 				value_detect = "";
 				mode = 1;
-			} else chars[char_i++] = new tb_character(c, font, color, effect);
+			} else {
+				/* When adding the first character, we simply set the data of the first node. For
+				all other elements, we create a new node and set the data of that new node. This avoids
+				adding an empty final node. */
+				if (tail.data == undefined) tail.data = new tb_character(c, font, color, effect);
+				else {
+					tail.next = { // the debugger does not show this line as working, very frustrating
+						data: new tb_character(c, font, color, effect),
+						next: undefined
+					};
+					tail = tail.next;
+				}
+			}
 		} else {
 			if (param_mode == 0) {
 				if (c == " ") param_mode = 1; // detect start of value detection
@@ -119,7 +151,7 @@ function generate_chars(text) {
 			}
 		}
 	}
-	return chars
+	return head;
 }
 
 /// @desc Return the pixel width of the given character array

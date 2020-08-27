@@ -1,3 +1,10 @@
+// textbox enums
+enum TB_ALIGN {
+	LEFT,
+	RIGHT,
+	CENTER
+}
+
 /// @desc Create textbox character.
 /// @func tb_character(character, font, color, *effect)
 function tb_character(c, f, r) constructor {
