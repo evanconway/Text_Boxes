@@ -38,20 +38,17 @@ function set_text(text) {
 /// @desc Create array of lines.
 function generate_lines(text) {
 	var words = generate_words(text);
-	var lines = [];
-	var lines_i = 0;
-	var line = []; // a line is an array of chars, not words
-	var line_i = 0;
+	var lines = ds_list_create();
+	var line = ds_list_create();
 	for (var i = 0; i < array_length(words); i++) {
 		var word = words[i];
-		var word_width = get_char_array_width(word);
-		var line_width = get_char_array_width(line);
+		var word_width = get_char_list_width(word);
+		var line_width = get_char_list_width(line);
 		if (line_width + word_width > width) {
-			if (array_length(line) == 0) show_error("Textbox width too small for given words!", true);
-			lines[lines_i++] = line;
+			if (ds_list_size(line) == 0) show_error("Textbox width too small! Some words are wider than the textbox!", true);
+			ds_list_add(lines, line);
 			line = word;
-			line_i = array_length(word);
-		} else for (var w = 0; w < array_length(word); w++) line[line_i++] = word[w];
+		} else for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, ds_list_find_value(word, w));
 	}
 	
 	/* Here, we remove spaces from the ends of lines depending on the text alignment of the box. */
@@ -73,31 +70,27 @@ function generate_lines(text) {
 /// @desc Create array of "words", or char arrays.
 function generate_words(text) {
 	var list = generate_chars(text); // recall this is linked list
-	var words = [];
-	var words_i = 0;
-	
-	var word = [];
-	var word_i = 0;
-	
+	var words = ds_list_create();
+	var word = ds_list_create();
 	while (list != undefined) {
 		var char = list.data;
 		if (char.character == " ") {
-			if (array_length(word) > 0) {
-				words[words_i++] = word;
-				word = [];
-				word_i = 0;
+			if (ds_list_size(word) > 0) {
+				ds_list_add(words, word);
+				word = ds_list_create();
 			}
-			words[words_i++] = [char];
-		} else word[word_i++] = char;
+			var temp = ds_list_create();
+			ds_list_add(temp, char);
+			ds_list_add(words, temp);
+		} else ds_list_add(word, char);
 		list = list.next;
 	}
-	words[words_i] = word;
+	ds_list_add(words, word);
 	return words;
 }
 
 /// @desc Create a linked list of chars from text with effects parsed.
 function generate_chars(text) {
-	
 	var head = {
 		data: undefined,
 		next: undefined
@@ -155,10 +148,10 @@ function generate_chars(text) {
 }
 
 /// @desc Return the pixel width of the given character array
-function get_char_array_width(char_array) {
+function get_char_list_width(char_list) {
 	var result = 0;
-	for (var i = 0; i < array_length(char_array); i++) {
-		result += char_array[i].width;
+	for (var i = 0; i < ds_list_size(char_list); i++) {
+		result += ds_list_find_value(char_list, i).width;
 	}
 	return result;
 }
