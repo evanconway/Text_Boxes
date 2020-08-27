@@ -19,13 +19,16 @@ alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text) {
-	characters = generate_lines(text);
+	var chars = generate_lines(text);
+	characters = array_create(ds_list_size(chars)); // characters must be an array
 	var _x = 0;
 	var _y = 0;
 	for (var i = 0; i < array_length(characters); i++) {
+		characters[i] = array_create(ds_list_size(chars[|i]));
 		var new_y = 0;
 		_x = 0;
 		for (var k = 0; k < array_length(characters[i]); k++) {
+			characters[i][k] = chars[|i][|k];
 			characters[i][k].char_x = _x;
 			characters[i][k].char_y = _y;
 			_x += characters[i][k].width;
@@ -40,30 +43,40 @@ function generate_lines(text) {
 	var words = generate_words(text);
 	var lines = ds_list_create();
 	var line = ds_list_create();
-	for (var i = 0; i < array_length(words); i++) {
-		var word = words[i];
+	for (var i = 0; i < ds_list_size(words); i++) {
+		var word = words[|i];
 		var word_width = get_char_list_width(word);
 		var line_width = get_char_list_width(line);
 		if (line_width + word_width > width) {
 			if (ds_list_size(line) == 0) show_error("Textbox width too small! Some words are wider than the textbox!", true);
 			ds_list_add(lines, line);
 			line = word;
-		} else for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, ds_list_find_value(word, w));
+		} else for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]);
 	}
 	
-	/* Here, we remove spaces from the ends of lines depending on the text alignment of the box. */
+	/* Here, we remove spaces from the ends of lines depending on the text alignment of the box. 
+	Recall that each line is a list of characters, not of words. For convenience, we're reusing
+	some variables from above. */
 	if (alignment == TB_ALIGN.LEFT) {
-		for (var i = 0; i < array_length(lines); i++) {
-			
+		for (var i = 0; i < ds_list_size(lines); i++) {
+			line = lines[|i];
+			while (line[|0].character == " ") ds_list_delete(line, 0);
 		}
 	}
 	if (alignment == TB_ALIGN.RIGHT) {
-		
+		for (var i = 0; i < ds_list_size(lines); i++) {
+			line = lines[|i];
+			while (line[|ds_list_size(line) - 1].character == " ") ds_list_delete(line, ds_list_size(line) - 1);
+		}
 	}
 	if (alignment == TB_ALIGN.CENTER) {
-		
+		// delete spaces from both sides
+		for (var i = 0; i < ds_list_size(lines); i++) {
+			line = lines[|i];
+			while (line[|0].character == " ") ds_list_delete(line, 0);
+			while (line[|ds_list_size(line) - 1].character == " ") ds_list_delete(line, ds_list_size(line) - 1);
+		}
 	}
-	
 	return lines;
 }
 
@@ -74,18 +87,24 @@ function generate_words(text) {
 	var word = ds_list_create();
 	while (list != undefined) {
 		var char = list.data;
-		if (char.character == " ") {
+		if (char.character == " ") { // check if space reached
+			/* Spaces are treated as their own word for line wrapping. So we
+			add whatever exists of `word` to `words` as well as adding the 
+			space itself. But in the case of consecutive spaces, we need to
+			check to only add `word` if it contains any characters. */
 			if (ds_list_size(word) > 0) {
 				ds_list_add(words, word);
 				word = ds_list_create();
 			}
+			// now add the space by itself
 			var temp = ds_list_create();
 			ds_list_add(temp, char);
 			ds_list_add(words, temp);
 		} else ds_list_add(word, char);
 		list = list.next;
 	}
-	ds_list_add(words, word);
+	// Add last word. Note last word will be empty if last char is space.
+	if (ds_list_size(word) > 0) ds_list_add(words, word);
 	return words;
 }
 
