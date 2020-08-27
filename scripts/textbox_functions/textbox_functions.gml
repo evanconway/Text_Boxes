@@ -18,6 +18,7 @@ function tb_character(c, f, r) constructor {
 	char_y = 0;
 	effect = undefined;
 	if (argument_count > 3) effect = argument[3];
+	
 	function update() {
 		
 	}

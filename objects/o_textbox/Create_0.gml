@@ -9,11 +9,11 @@ characters = undefined; // character array
 cursor_row = -1;
 cursor_char = -1;
 font_default = undefined;
-color_default = undefined;
+color_default = draw_get_color();
 typing_rate = 0.3; // rate of 1 means typing increments once each frame
 typing_increment = 2; // how far to increase cursor each increment
 autoupdate = true;
-width = 500;
+width = 300;
 height = 70;
 alignment = TB_ALIGN.LEFT;
 
@@ -126,10 +126,10 @@ function generate_chars(text) {
 		var c = string_char_at(text, i);
 		if (mode == 0) {
 			if (c == "<") { // detect start of param tag
+				mode = 1;
 				param_mode = 0;
 				param_detect = "";
 				value_detect = "";
-				mode = 1;
 			} else {
 				/* When adding the first character, we simply set the data of the first node. For
 				all other elements, we create a new node and set the data of that new node. This avoids
@@ -150,8 +150,10 @@ function generate_chars(text) {
 			} else {
 				if (c != ">") value_detect += c;
 				else {
+					mode = 0;
 					if (param_detect == "color") {
 						if (value_detect == "default") color = color_default;
+						else color = get_tb_color(value_detect);
 					}
 					if (param_detect == "font") {
 						font = font_default;
@@ -164,6 +166,51 @@ function generate_chars(text) {
 		}
 	}
 	return head;
+}
+
+function get_tb_color(new_color) {
+	var color_change = undefined;
+	if (new_color == "aqua") color_change = c_aqua;
+	if (new_color == "black") color_change = c_black;
+	if (new_color == "blue") color_change = c_blue;
+	if (new_color == "dkgray") color_change = c_dkgray;
+	if (new_color == "fuchsia") color_change = c_fuchsia;
+	if (new_color == "gray") color_change = c_gray;
+	if (new_color == "green") color_change = c_green;
+	if (new_color == "lime") color_change = c_lime;
+	if (new_color == "ltgray") color_change = c_ltgray;
+	if (new_color == "maroon") color_change = c_maroon;
+	if (new_color == "navy") color_change = c_navy;
+	if (new_color == "olive") color_change = c_olive;
+	if (new_color == "orange") color_change = c_orange;
+	if (new_color == "purple") color_change = c_purple;
+	if (new_color == "red") color_change = c_red;
+	if (new_color == "silver") color_change = c_silver;
+	if (new_color == "teal") color_change = c_teal;
+	if (new_color == "white") color_change = c_white;
+	if (new_color == "yellow") color_change = c_yellow;
+	
+	// Here we will check for a valid rbg code, assuming a color has not yet been found.
+	if (color_change == undefined) {
+		var rgb_r = "";
+		var rgb_g = "";
+		var rgb_b = "";
+		var detecting = 0;
+		for (var i = 1; i <= string_length(new_color) && detecting < 3; i++) {
+			var c = string_char_at(new_color, i);
+			if (c == ",") detecting++;
+			else {
+				if (detecting == 0) rgb_r += c;
+				if (detecting == 1) rgb_g += c;
+				if (detecting == 2) rgb_b += c;
+			}
+		}
+		try color_change = make_color_rgb(string_digits(rgb_r), string_digits(rgb_g), string_digits(rgb_b));
+		catch (error) show_error("Invalid RGB values for textbox! Error: " + error.message, true);
+	}
+	
+	if (color_change == undefined) show_error(string(new_color) + "is an invalid textbox color!", true);
+	return color_change;
 }
 
 /// @desc Return the pixel width of the given character array
