@@ -10,6 +10,7 @@ cursor_row = -1;
 cursor_char = -1;
 font_default = undefined;
 color_default = draw_get_color();
+effect_default = undefined;
 typing_rate = 0.3; // rate of 1 means typing increments once each frame
 typing_increment = 2; // how far to increase cursor each increment
 autoupdate = true;
@@ -116,7 +117,7 @@ function generate_chars(text) {
 	};
 	var tail = head;
 	var mode = 0; // 0 for parsing text, 1 for parsing effects
-	var effect = undefined;
+	var effect = effect_default;
 	var color = color_default;
 	var font = font_default;
 	var param_mode = 0; // 0 for detect param, 1 for detect value
@@ -134,10 +135,10 @@ function generate_chars(text) {
 				/* When adding the first character, we simply set the data of the first node. For
 				all other elements, we create a new node and set the data of that new node. This avoids
 				adding an empty final node. */
-				if (tail.data == undefined) tail.data = new tb_character(c, font, color, effect);
+				if (tail.data == undefined) tail.data = new tb_character(c, font, color, effect, i);
 				else {
 					tail.next = { // the debugger does not show this line as working, very frustrating
-						data: new tb_character(c, font, color, effect),
+						data: new tb_character(c, font, color, effect, i),
 						next: undefined
 					};
 					tail = tail.next;
@@ -159,7 +160,12 @@ function generate_chars(text) {
 						font = font_default;
 					}
 					if (param_detect == "effect") {
-						effect = undefined;
+						effect = value_detect;
+					}
+					if (param_detect == "reset" && value_detect == "all") {
+						font = font_default;
+						color = color_default;
+						effect = effect_default;
 					}
 				}
 			}
@@ -239,8 +245,8 @@ function set_autoupdate(a) {
 
 /// @desc Determine character typing, and update char structs.
 function update() {
-	for (var i = 0; i <= cursor_row; i++) {
-		for (var k = 0; k <= cursor_char; k++) {
+	for (var i = 0; i < array_length(characters); i++) {
+		for (var k = 0; k < array_length(characters[i]); k++) {
 			characters[i][k].update();
 		}
 	}

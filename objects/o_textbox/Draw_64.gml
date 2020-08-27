@@ -11,6 +11,6 @@ for (var i = 0; i <= cursor_row; i++) {
 		var c = characters[i][k];
 		if (c.font != undefined) draw_set_font(c.font);
 		if (c.char_color != undefined) draw_set_color(c.char_color);
-		draw_text(c.char_x, c.char_y, c.character);
+		draw_text(x + c.draw_x, y + c.draw_y, c.character);
 	}
 }
