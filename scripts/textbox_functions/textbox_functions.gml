@@ -37,16 +37,23 @@ function tb_character(c, f, r, e, i) constructor {
 	wave_time = 0;
 	wave_value = 0;
 	
+	shake_magnitude = 1; // x/y offset will be between negative and positive of this value, inclusive
+	shake_rate = 0.2;
+	shake_time = 0;
+	
 	if (argument_count > 3) effect = argument[3];
 	
 	function update() {
-		draw_x = char_x;
-		draw_y = char_y;
+		if (effect == "undefined") {
+			draw_x = char_x;
+			draw_y = char_y;
+		}
 		
 		if (effect == "float") {
+			draw_x = char_x;
 			float_time += float_rate;
 			if (float_time >= 1) {
-				while (float_time > 1) float_time -= 1;
+				while (float_time >= 1) float_time--;
 				float_value += pi/float_magnitude/4; // magic number
 			}
 			var y_offset = floor(sin(float_value) * float_magnitude + 0.5);
@@ -54,9 +61,10 @@ function tb_character(c, f, r, e, i) constructor {
 		}
 		
 		if (effect == "wave") {
+			draw_x = char_x;
 			wave_time += wave_rate;
 			if (wave_time >= 1) {
-				while (wave_time > 1) wave_time -= 1;
+				while (wave_time >= 1) wave_time--;
 				wave_value += pi/wave_magnitude/4; // magic number
 			}
 			/* Notice the index modifier in the sin function. This ensures that each character using this
@@ -64,6 +72,15 @@ function tb_character(c, f, r, e, i) constructor {
 			and float effects. */
 			var y_offset = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
 			draw_y = char_y + y_offset;
+		}
+		
+		if (effect == "shake") {
+			shake_time += shake_rate;
+			if (shake_time >= 1) {
+				while (shake_time >= 1) shake_time--;
+				draw_x = char_x + irandom_range(shake_magnitude * -1, shake_magnitude);
+				draw_y = char_y + irandom_range(shake_magnitude * -1, shake_magnitude);
+			}
 		}
 	}
 }

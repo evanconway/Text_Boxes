@@ -14,8 +14,8 @@ effect_default = undefined;
 typing_rate = 0.3; // rate of 1 means typing increments once each frame
 typing_increment = 2; // how far to increase cursor each increment
 autoupdate = true;
-width = 300;
-height = 70;
+width = 400;
+height = 700;
 alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
