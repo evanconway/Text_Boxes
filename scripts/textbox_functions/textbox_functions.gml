@@ -43,6 +43,16 @@ function tb_character(c, f, r, e, i) constructor {
 	
 	if (argument_count > 3) effect = argument[3];
 	
+	function set_char_x(new_x) {
+		char_x = new_x;
+		draw_x = new_x;
+	}
+	
+	function set_char_y(new_y) {
+		char_y = new_y;
+		draw_y = new_y;
+	}
+	
 	function update() {
 		if (effect == "undefined") {
 			draw_x = char_x;

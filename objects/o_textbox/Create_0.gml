@@ -30,8 +30,8 @@ function set_text(text) {
 		_x = 0;
 		for (var k = 0; k < array_length(characters[i]); k++) {
 			characters[i][k] = chars[|i][|k];
-			characters[i][k].char_x = _x;
-			characters[i][k].char_y = _y;
+			characters[i][k].set_char_x(_x);
+			characters[i][k].set_char_y(_y);
 			_x += characters[i][k].width;
 			if (characters[i][k].height > new_y) new_y = characters[i][k].height;
 		}
