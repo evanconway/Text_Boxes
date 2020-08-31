@@ -20,7 +20,7 @@ alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text) {
-	var chars = generate_lines(text);
+	var chars = generate_lines(text); // recall this is a 2D list
 	characters = array_create(ds_list_size(chars)); // characters must be an array
 	var _x = 0;
 	var _y = 0;
@@ -35,8 +35,10 @@ function set_text(text) {
 			_x += characters[i][k].width;
 			if (characters[i][k].height > new_y) new_y = characters[i][k].height;
 		}
+		ds_list_destroy(chars[|i]);
 		_y += new_y;
 	}
+	ds_list_destroy(chars);
 }
 
 /// @desc Create array of lines.
@@ -51,10 +53,17 @@ function generate_lines(text) {
 		if (line_width + word_width > width) {
 			if (ds_list_size(line) == 0) show_error("Textbox width too small! Some words are wider than the textbox!", true);
 			ds_list_add(lines, line);
-			line = word;
-		} else for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]);
+			/* The current word is too big, so it become the start of the new line. But note, we don't simply do line = word.
+			Instead we create a new list, and append all the elements in word to line. Why? It's because we have to destory 
+			the 2D word list later. If we do line = word, we're simply assigning line to reference the same list as word, 
+			which is a list in words. If we did this, when we destoryed the words list, we'd also be destroying lines. */
+			line = ds_list_create()
+			for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]); // joine line and word lists
+		} else for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]); // join line and word lists
+		ds_list_destroy(word); // this is also words[|i]
 	}
-	
+	ds_list_destroy(words);
+	if (ds_list_size(line) > 0) ds_list_add(lines, line);
 	/* Here, we remove spaces from the ends of lines depending on the text alignment of the box. 
 	Recall that each line is a list of characters, not of words. For convenience, we're reusing
 	some variables from above. */
@@ -81,6 +90,8 @@ function generate_lines(text) {
 	return lines;
 }
 
+/* This function returns a 2D ds_list. Do not forget to destroy it once
+you are finished with it. */
 /// @desc Create array of "words", or char arrays.
 function generate_words(text) {
 	var list = generate_chars(text); // recall this is linked list
@@ -152,6 +163,8 @@ function generate_chars(text) {
 				if (c != ">") value_detect += c;
 				else {
 					mode = 0;
+					param_detect = string_lower(param_detect);
+					value_detect = string_lower(value_detect);
 					if (param_detect == "color") {
 						if (value_detect == "default") color = color_default;
 						else color = get_tb_color(value_detect);
@@ -160,7 +173,10 @@ function generate_chars(text) {
 						font = font_default;
 					}
 					if (param_detect == "effect") {
-						effect = value_detect;
+						if (value_detect == "none") effect = TB_EFFECT.NONE;
+						else if (value_detect == "wave") effect = TB_EFFECT.WAVE;
+						else if (value_detect == "shake") effect = TB_EFFECT.SHAKE;
+						else if (value_detect == "float") effect = TB_EFFECT.FLOAT;
 					}
 					if (param_detect == "reset" && value_detect == "all") {
 						font = font_default;

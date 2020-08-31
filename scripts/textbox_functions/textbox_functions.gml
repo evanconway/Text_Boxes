@@ -5,6 +5,13 @@ enum TB_ALIGN {
 	CENTER
 }
 
+enum TB_EFFECT {
+	WAVE,
+	FLOAT,
+	SHAKE,
+	NONE
+}
+
 /// @desc Create textbox character.
 /// @func tb_character(character, font, color, effect, index)
 function tb_character(c, f, r, e, i) constructor {
@@ -54,12 +61,13 @@ function tb_character(c, f, r, e, i) constructor {
 	}
 	
 	function update() {
-		if (effect == "undefined") {
+		if (effect == TB_EFFECT.NONE) {
 			draw_x = char_x;
 			draw_y = char_y;
+			return;
 		}
 		
-		if (effect == "float") {
+		if (effect == TB_EFFECT.FLOAT) {
 			draw_x = char_x;
 			float_time += float_rate;
 			if (float_time >= 1) {
@@ -68,9 +76,10 @@ function tb_character(c, f, r, e, i) constructor {
 			}
 			var y_offset = floor(sin(float_value) * float_magnitude + 0.5);
 			draw_y = char_y + y_offset;
+			return;
 		}
 		
-		if (effect == "wave") {
+		if (effect == TB_EFFECT.WAVE) {
 			draw_x = char_x;
 			wave_time += wave_rate;
 			if (wave_time >= 1) {
@@ -82,15 +91,17 @@ function tb_character(c, f, r, e, i) constructor {
 			and float effects. */
 			var y_offset = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
 			draw_y = char_y + y_offset;
+			return;
 		}
 		
-		if (effect == "shake") {
+		if (effect == TB_EFFECT.SHAKE) {
 			shake_time += shake_rate;
 			if (shake_time >= 1) {
 				while (shake_time >= 1) shake_time--;
 				draw_x = char_x + irandom_range(shake_magnitude * -1, shake_magnitude);
 				draw_y = char_y + irandom_range(shake_magnitude * -1, shake_magnitude);
 			}
+			return;
 		}
 	}
 }
