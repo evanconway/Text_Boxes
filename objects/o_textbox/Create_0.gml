@@ -58,8 +58,8 @@ function generate_lines(text) {
 			the 2D word list later. If we do line = word, we're simply assigning line to reference the same list as word, 
 			which is a list in words. If we did this, when we destoryed the words list, we'd also be destroying lines. */
 			line = ds_list_create()
-			for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]); // joine line and word lists
-		} else for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]); // join line and word lists
+		}
+		for (var w = 0; w < ds_list_size(word); w++) ds_list_add(line, word[|w]); // join line and word lists
 		ds_list_destroy(word); // this is also words[|i]
 	}
 	ds_list_destroy(words);
