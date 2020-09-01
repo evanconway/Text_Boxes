@@ -16,6 +16,7 @@ for (var irow = 0; irow < ds_list_size(text); irow++) {
 		var draw_y = _y + text_struct.draw_mod_y;
 		draw_text(draw_x, draw_y, text_struct.text);
 		if (text_struct.get_height() > row_height) row_height = text_struct.get_height();
+		_x += text_struct.get_width();
 	}
 	_y += row_height;
 }

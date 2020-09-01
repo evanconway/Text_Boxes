@@ -36,8 +36,8 @@ function tb_text(fnt, col, fx) constructor {
 	text_color = col;
 	width = 0;
 	height = 0;
-	calculate_width = false; // marked when text changed
-	calculate_height = false;
+	calculate_width = true; // marked when text changed
+	calculate_height = true;
 	draw_mod_x = 0;
 	draw_mod_y = 0;
 	effect = fx;

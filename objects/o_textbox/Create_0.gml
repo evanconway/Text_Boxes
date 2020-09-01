@@ -25,7 +25,7 @@ function set_text(text_string) {
 	}
 	text = ds_list_create();
 	var line = ds_list_create();
-	var word = word_get_new(font, color, effect);
+	var word = ds_list_create();
 	
 	// iterate over every character in the string
 	for (var i = 1; i <= string_length(text_string); i++) {
@@ -34,7 +34,7 @@ function set_text(text_string) {
 		// determine if checking for text or effect tags
 		if (c == "<") {
 			var end_i = string_pos_ext(">", text_string, i + 1);
-			var command_text = string_copy(text_string, i + 1, end_i - 1);
+			var command_text = string_copy(text_string, i + 1, end_i - i - 1);
 			var effects = command_get_effects_arr(command_text, font, color, effect);
 			font = effects[0];
 			color = effects[1];
@@ -49,11 +49,11 @@ function set_text(text_string) {
 					ds_list_add(text, line);
 					word_add_char(word, c, font, color, effect, i); // add space after checking width
 					line = word;
-					word = word_get_new(font, color, effect);
+					word = ds_list_create();
 				} else {
 					word_add_char(word, c, font, color, effect, i);
 					line_add_word(line, word);
-					word = word_get_new(font, color, effect);
+					word = ds_list_create();
 				}
 			} else word_add_char(word, c, font, color, effect, i);
 		}
@@ -63,28 +63,23 @@ function set_text(text_string) {
 
 function command_get_effects_arr(command_text, font, color, effect) {
 	var command = "";
-	for (var i = 1; i < string_length(command_text); i++) {
+	for (var i = 1; i <= string_length(command_text); i++) {
 		var c = string_char_at(command_text, i);
-		if (c != " ") command += c;
-		else {
+		if (i == string_length(command_text)) command += c;
+		if (c == " " || i == string_length(command_text)) {
+			command = string_lower(command);
 			var new_color = tb_get_color(command);
 			if (new_color != undefined) color = new_color;
 			
 			// effects
-			if(command == "no_effect") effect = TB_EFFECT.NONE;
+			if(command == "none") effect = TB_EFFECT.NONE;
 			else if(command == "wave") effect = TB_EFFECT.WAVE;
 			else if(command == "float") effect = TB_EFFECT.FLOAT;
 			else if(command == "shake") effect = TB_EFFECT.SHAKE;
 			command = "";
-		}
+		} else command += c;
 	}
 	return [font, color, effect];
-}
-
-function list_join(a, b) {
-	for (var i = 0; i < ds_list_size(b); i++) {
-		ds_list_add(a, b[|i]);
-	}
 }
 
 function line_add_word(line, word) {
@@ -105,21 +100,20 @@ function line_add_word(line, word) {
 }
 
 function word_add_char(word, character, font, color, effect, index) {
+	if (ds_list_size(word) == 0) {
+		ds_list_add(word, new tb_text(font, color, effect, character, index));
+		return;
+	}
 	if (effect != TB_EFFECT.WAVE && effect != TB_EFFECT.SHAKE) {
 		var last_struct = word[|ds_list_size(word) - 1];
 		last_struct.add_text(character);
 	} else ds_list_add(word, new tb_text(font, color, effect, character, index));
 }
 
-function word_get_new(font, color, effect) {
-	var new_word = ds_list_create();
-	ds_list_add(new_word, new tb_text(font, color, effect));
-	return new_word;
-}
-
 function tb_get_color(new_color) {
 	var color_change = undefined;
-	if (new_color == "aqua") color_change = c_aqua;
+	if (new_color == "default") color_change = color_default;
+	else if (new_color == "aqua") color_change = c_aqua;
 	else if (new_color == "black") color_change = c_black;
 	else if (new_color == "blue") color_change = c_blue;
 	else if (new_color == "dkgray") color_change = c_dkgray;
