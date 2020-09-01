@@ -15,6 +15,7 @@ alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
+	show_debug_message("set text called");
 	var font = font_default;
 	var color = color_default;
 	var effect = effect_default;
@@ -23,6 +24,7 @@ function set_text(text_string) {
 			ds_list_destroy(text[|i]);
 		}
 	}
+	show_debug_message("Previous text list destroyed.");
 	text = ds_list_create();
 	var line = ds_list_create();
 	var word = ds_list_create();
@@ -30,18 +32,23 @@ function set_text(text_string) {
 	// iterate over every character in the string
 	for (var i = 1; i <= string_length(text_string); i++) {
 		var c = string_char_at(text_string, i);
+		show_debug_message("top of loop, index: " + string(i) + " character: " + c);
 		
 		// determine if checking for text or effect tags
 		if (c == "<") {
-			var end_i = string_pos_ext(">", text_string, i + 1);
+			var start_i = i + 1;
+			var end_i = string_pos_ext(">", text_string, start_i);
+			show_debug_message("parsing effect tag from index: " + string(i) + " to " + string(end_i));
 			var command_text = string_copy(text_string, i + 1, end_i - i - 1);
 			var effects = command_get_effects_arr(command_text, font, color, effect);
 			font = effects[0];
 			color = effects[1];
 			effect = effects[2];
 			i = end_i;
+			show_debug_message("Effects parsed! Index set to " + string(i));
 		} else {
 			// add character logic
+			show_debug_message("adding character '" + c + "' to word.");
 			if (c == " ") {
 				var line_width = text_list_width(line);
 				var word_width = text_list_width(word);
@@ -58,6 +65,14 @@ function set_text(text_string) {
 			} else word_add_char(word, c, font, color, effect, i);
 		}
 	}
+	
+	// add remaining line and word values
+	if (ds_list_size(line) >  0 || ds_list_size(word) > 0) {
+		line_add_word(line, word);
+		ds_list_add(text, line);
+	}
+	
+	show_debug_message("Text generated");
 	return text;
 }
 
@@ -156,6 +171,7 @@ function tb_get_color(new_color) {
 
 /// @desc Determine character typing, and update char structs.
 function update() {
+	if (text == undefined) return;
 	for (var i = 0; i < ds_list_size(text); i++) {
 		for (var k = 0; k < ds_list_size(text[|i]); k++) {
 			text[|i][|k].update();
