@@ -1,5 +1,3 @@
-
-
 text = undefined; // ds_list of text structs
 cursor_row = -1;
 cursor_char = -1;
@@ -58,8 +56,8 @@ function set_text(text_string) {
 					word = ds_list_create();
 				} else {
 					word_add_char(word, c, font, color, effect, i);
-					line_add_word(line, word);
-					word = ds_list_create();
+					line_add_word(line, word); // the word list still exists after this
+					ds_list_clear(word);
 				}
 			} else word_add_char(word, c, font, color, effect, i);
 		}
@@ -70,7 +68,8 @@ function set_text(text_string) {
 		line_add_word(line, word);
 		ds_list_add(text, line);
 	}
-	
+	//ds_list_destroy(line);
+	ds_list_destroy(word);
 	show_debug_message("Text generated");
 	return text;
 }
