@@ -124,3 +124,11 @@ function tb_text(fnt, col, fx) constructor {
 		}
 	}
 }
+
+/* string_pos_ext appears to be bugged in html builds for now. It behaves like
+string_pos, and ignores the starting index. */
+/// @desc same as string_pos_ext
+function htmlsafe_string_pos_ext(substr, str, startpos) {
+	var rest_of_string = string_delete(str, 1, startpos)
+	return string_pos(substr, rest_of_string) + startpos;
+}
