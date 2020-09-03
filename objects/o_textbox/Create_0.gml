@@ -29,7 +29,7 @@ function set_text(text_string) {
 		
 		// determine if checking for text or effect tags
 		if (c == "<") {
-			var end_i = string_pos_ext(">", text_string, i + 1);
+			var end_i = htmlsafe_string_pos_ext(">", text_string, i + 1);
 			var command_text = string_copy(text_string, i + 1, end_i - i - 1);
 			var effects = command_get_effects_arr(command_text, font, color, effect);
 			font = effects[@ 0];
