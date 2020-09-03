@@ -1,4 +1,4 @@
-text = undefined; // ds_list of text structs
+text = ds_list_create(); // ds_list of text structs
 cursor_row = -1;
 cursor_char = -1;
 font_default = draw_get_font();
@@ -13,39 +13,32 @@ alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
-	show_debug_message("set text called");
 	var font = font_default;
 	var color = color_default;
 	var effect = effect_default;
-	if (text != undefined) {
-		for (var i = 0; i < ds_list_size(text); i++) {
-			ds_list_destroy(text[|i]);
-		}
+	for (var i = 0; i < ds_list_size(text); i++) {
+		struct_list_destroy(text[|i]);
 	}
-	show_debug_message("Previous text list destroyed.");
-	text = ds_list_create();
+	ds_list_clear(text);
 	var line = ds_list_create();
 	var word = ds_list_create();
 	
 	// iterate over every character in the string
 	for (var i = 1; i <= string_length(text_string); i++) {
 		var c = string_char_at(text_string, i);
-		show_debug_message("top of loop, index: " + string(i) + " character: " + c);
 		
 		// determine if checking for text or effect tags
 		if (c == "<") {
-			var end_i = htmlsafe_string_pos_ext(">", text_string, i + 1);
-			show_debug_message("parsing effect tag from index: " + string(i) + " to " + string(end_i));
+			var end_i = string_pos_ext(">", text_string, i + 1);
 			var command_text = string_copy(text_string, i + 1, end_i - i - 1);
 			var effects = command_get_effects_arr(command_text, font, color, effect);
-			font = effects[0];
-			color = effects[1];
-			effect = effects[2];
+			font = effects[@ 0];
+			color = effects[@ 1];
+			effect = effects[@ 2];
 			i = end_i;
-			show_debug_message("Effects parsed! Index set to " + string(i));
 		} else {
+			
 			// add character logic
-			show_debug_message("adding character '" + c + "' to word.");
 			if (c == " ") {
 				var line_width = text_list_width(line);
 				var word_width = text_list_width(word);
@@ -57,7 +50,7 @@ function set_text(text_string) {
 				} else {
 					word_add_char(word, c, font, color, effect, i);
 					line_add_word(line, word); // the word list still exists after this
-					ds_list_clear(word);
+					struct_list_clear(word);
 				}
 			} else word_add_char(word, c, font, color, effect, i);
 		}
@@ -68,9 +61,7 @@ function set_text(text_string) {
 		line_add_word(line, word);
 		ds_list_add(text, line);
 	}
-	//ds_list_destroy(line);
-	ds_list_destroy(word);
-	show_debug_message("Text generated");
+	struct_list_destroy(word);
 	return text;
 }
 
@@ -112,14 +103,35 @@ function line_add_word(line, word) {
 	}
 }
 
+function struct_list_destroy(list) {
+	for (var i = 0; i < ds_list_size(list); i++) {
+		delete list[|i];
+	}
+	ds_list_destroy(list);
+}
+
+function struct_list_clear(list) {
+	for (var i = 0; i < ds_list_size(list); i++) {
+		delete list[|i];
+	}
+	ds_list_clear(list);
+}
+
 function word_add_char(word, character, font, color, effect, index) {
+	ds_list_add(word, new tb_text(font, color, effect, character, index));
+	return;
+	
 	if (ds_list_size(word) == 0) {
 		ds_list_add(word, new tb_text(font, color, effect, character, index));
 		return;
 	}
-	if (effect != TB_EFFECT.WAVE && effect != TB_EFFECT.SHAKE) {
-		var last_struct = word[|ds_list_size(word) - 1];
-		last_struct.add_text(character);
+	var last_struct = word[|ds_list_size(word) - 1];
+	if (last_struct.font == font &&
+		last_struct.text_color == color &&
+		last_struct.effect  == effect &&
+		effect != TB_EFFECT.WAVE &&
+		effect != TB_EFFECT.SHAKE) {
+			last_struct.add_text(character);
 	} else ds_list_add(word, new tb_text(font, color, effect, character, index));
 }
 
