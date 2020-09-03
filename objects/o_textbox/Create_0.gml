@@ -1,14 +1,15 @@
 text = ds_list_create(); // ds_list of text structs
-cursor_row = 0;
 cursor_char = 0;
 font_default = draw_get_font();
 color_default = draw_get_color();
 effect_default = TB_EFFECT.NONE;
-typing_frames = 0.5; // frames between each "type", 0 means type each frame
+typing_frames = 3.2; // frames between each "type", values less than 1 result in 0 frames
+typing_frames_period = typing_frames * 15;
+typing_frames_pause = typing_frames * 10;
 typing_increment = 1.7; // how far to increase cursor each increment
 typing_time = typing_frames;
 autoupdate = true;
-width = 400;
+width = 1000;
 height = 700;
 alignment = TB_ALIGN.LEFT;
 
@@ -196,11 +197,15 @@ function text_struct_list_length(list) {
 	return result;
 }
 
-/// @desc Return the character at the given row and char index.
-function text_char_at(irow, ichar) {
-	if (irow > ds_list_size(text)) return undefined;
-	for (var i = 0; i < ds_list_size(text); i++) {
-		
+/// @desc Return the character at the given character index.
+function text_char_at(ichar) {
+	ichar = floor(ichar);
+	for (var irow = 0; irow < ds_list_size(text); irow++) {
+		for (var i = 0; i < ds_list_size(text[|irow]); i++) {
+			var struct_text = text[|irow][|i].text;
+			if (ichar > string_length(struct_text)) ichar -= string_length(struct_text);
+			else return string_char_at(struct_text, ichar);	
+		}
 	}
 	return undefined;
 }
@@ -208,17 +213,24 @@ function text_char_at(irow, ichar) {
 /// @desc Determine character typing, and update char structs.
 function update() {
 	if (typing_time <= 0) {
-		typing_time = typing_frames;
-		cursor_char += typing_increment;
-		// check if cursor is beyond current row size
-		if (cursor_char > text_struct_list_length(text[|cursor_row])) {
-			// Increase to next row, but only if we aren't already at last row
-			if (cursor_row < ds_list_size(text) - 1) {
-				cursor_row++;
-				cursor_char = 1;
-			} else {
-				cursor_row = ds_list_size(text) - 1;
-				cursor_char = text_struct_list_length(text[|cursor_row]);
+		typing_time += typing_frames;
+		
+		/* increase character cursor. We iterate over the new
+		"typing_increment" number of times. But we stop if we
+		encounter punctiation. */
+		var _typing_increment = typing_increment;
+		while (_typing_increment > 0) {
+			if (_typing_increment >= 1) cursor_char++;
+			else cursor_char += _typing_increment;
+			_typing_increment -= 1;
+			var char_at_cursor = text_char_at(cursor_char);
+			if (char_at_cursor == ".") {
+				_typing_increment = 0;
+				typing_time = typing_frames_period;
+			}
+			if (char_at_cursor == "," || char_at_cursor == ";") {
+				_typing_increment = 0;
+				typing_time = typing_frames_pause;
 			}
 		}
 	}
