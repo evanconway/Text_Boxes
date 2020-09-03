@@ -67,6 +67,7 @@ function set_text(text_string) {
 
 function command_get_effects_arr(command_text, font, color, effect) {
 	var command = "";
+	
 	for (var i = 1; i <= string_length(command_text); i++) {
 		var c = string_char_at(command_text, i);
 		if (i == string_length(command_text)) command += c;
@@ -83,6 +84,7 @@ function command_get_effects_arr(command_text, font, color, effect) {
 			command = "";
 		} else command += c;
 	}
+	
 	return [font, color, effect];
 }
 
@@ -173,10 +175,15 @@ function tb_get_color(new_color) {
 				if (detecting == 2) rgb_b += c;
 			}
 		}
-		try color_change = make_color_rgb(string_digits(rgb_r), string_digits(rgb_g), string_digits(rgb_b));
-		catch (e) {};
+		if (is_number(rgb_r) && is_number(rgb_g) && is_number(rgb_b)) {
+			color_change = make_color_rgb(string_digits(rgb_r), string_digits(rgb_g), string_digits(rgb_b));
+		}
 	}
 	return color_change;
+}
+
+function is_number(s) {
+	return string_digits(s) == s;
 }
 
 /// @desc Determine character typing, and update char structs.
