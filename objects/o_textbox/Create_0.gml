@@ -1,5 +1,5 @@
 text = ds_list_create(); // ds_list of text structs
-cursor_row = -1;
+cursor_row = 1000;
 cursor_char = -1;
 font_default = draw_get_font();
 color_default = draw_get_color();
@@ -67,7 +67,6 @@ function set_text(text_string) {
 
 function command_get_effects_arr(command_text, font, color, effect) {
 	var command = "";
-	
 	for (var i = 1; i <= string_length(command_text); i++) {
 		var c = string_char_at(command_text, i);
 		if (i == string_length(command_text)) command += c;
@@ -84,10 +83,11 @@ function command_get_effects_arr(command_text, font, color, effect) {
 			command = "";
 		} else command += c;
 	}
-	
 	return [font, color, effect];
 }
 
+/* Adds text to existing structs if the effects are the same, otherwise 
+creates new ones. */
 function line_add_word(line, word) {
 	if (ds_list_size(line) == 0) {
 		for (var i = 0; i < ds_list_size(word); i++) ds_list_add(line, word[|i]);
@@ -119,10 +119,9 @@ function struct_list_clear(list) {
 	ds_list_clear(list);
 }
 
+/* Adds text to existing structs if the effects are the same, otherwise 
+creates new ones. */
 function word_add_char(word, character, font, color, effect, index) {
-	ds_list_add(word, new tb_text(font, color, effect, character, index));
-	return;
-	
 	if (ds_list_size(word) == 0) {
 		ds_list_add(word, new tb_text(font, color, effect, character, index));
 		return;
@@ -182,6 +181,7 @@ function tb_get_color(new_color) {
 	return color_change;
 }
 
+/// @desc Returns true if given string contains only number characters.
 function is_number(s) {
 	return string_digits(s) == s;
 }

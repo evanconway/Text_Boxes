@@ -1,12 +1,12 @@
-if (text == undefined) exit;
-
 draw_set_valign(fa_top);
 draw_set_halign(fa_left);
 
 var _x = 0;
 var _y = 40;
 
-for (var irow = 0; irow < ds_list_size(text); irow++) {
+cursor_row = ds_list_size(text);
+
+for (var irow = 0; irow < cursor_row; irow++) {
 	_x = 40;
 	var row_height = 0;
 	for (var icol = 0; icol < ds_list_size(text[|irow]); icol++) {
