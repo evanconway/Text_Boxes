@@ -1,11 +1,12 @@
 text = ds_list_create(); // ds_list of text structs
-cursor_row = 1000;
-cursor_char = -1;
+cursor_row = 0;
+cursor_char = 0;
 font_default = draw_get_font();
 color_default = draw_get_color();
 effect_default = TB_EFFECT.NONE;
-typing_rate = 0.3; // rate of 1 means typing increments once each frame
-typing_increment = 2; // how far to increase cursor each increment
+typing_frames = 0.5; // frames between each "type", 0 means type each frame
+typing_increment = 1.7; // how far to increase cursor each increment
+typing_time = typing_frames;
 autoupdate = true;
 width = 400;
 height = 700;
@@ -186,9 +187,43 @@ function is_number(s) {
 	return string_digits(s) == s;
 }
 
+/// @desc Return the combined string length of a list of text structs
+function text_struct_list_length(list) {
+	var result = 0;
+	for (var i = 0; i < ds_list_size(list); i++) {
+		result += string_length(list[|i].text);
+	}
+	return result;
+}
+
+/// @desc Return the character at the given row and char index.
+function text_char_at(irow, ichar) {
+	if (irow > ds_list_size(text)) return undefined;
+	for (var i = 0; i < ds_list_size(text); i++) {
+		
+	}
+	return undefined;
+}
+
 /// @desc Determine character typing, and update char structs.
 function update() {
-	if (text == undefined) return;
+	if (typing_time <= 0) {
+		typing_time = typing_frames;
+		cursor_char += typing_increment;
+		// check if cursor is beyond current row size
+		if (cursor_char > text_struct_list_length(text[|cursor_row])) {
+			// Increase to next row, but only if we aren't already at last row
+			if (cursor_row < ds_list_size(text) - 1) {
+				cursor_row++;
+				cursor_char = 1;
+			} else {
+				cursor_row = ds_list_size(text) - 1;
+				cursor_char = text_struct_list_length(text[|cursor_row]);
+			}
+		}
+	}
+	typing_time--;
+	
 	for (var i = 0; i < ds_list_size(text); i++) {
 		for (var k = 0; k < ds_list_size(text[|i]); k++) {
 			text[|i][|k].update();
