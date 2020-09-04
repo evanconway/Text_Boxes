@@ -258,7 +258,8 @@ function update() {
 				if (chirp_id != undefined) audio_sound_gain(chirp_id, 0, 30);
 				//if (chirp_id != undefined) audio_stop_sound(chirp_id);
 				chirp_id = audio_play_sound(chirp, 1, false);
-				audio_sound_gain(chirp_id, chirp_gain, 0);
+				var chirp_gain_default = audio_sound_get_gain(chirp);
+				audio_sound_gain(chirp_id, chirp_gain * chirp_gain_default, 0);
 			}
 			
 			/* increase character cursor. We iterate over the new
@@ -283,7 +284,7 @@ function update() {
 		
 		/* Note that delta_time is the time in microseconds since the last frame. Our
 		time variables are in milliseconds. */
-		typing_time -= delta_time_debug()/1000;
+		typing_time -= textbox_delta_time()/1000;
 	}
 	
 	for (var i = 0; i < ds_list_size(text); i++) {
