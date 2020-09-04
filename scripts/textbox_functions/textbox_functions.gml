@@ -21,6 +21,16 @@ function text_list_width(list) {
 	return width;
 }
 
+function text_list_height(list) {
+	var height = 0;
+	for (var i = 0; i < ds_list_size(list); i++) {
+		if (list[|i].get_height() > height) {
+			height = list[|i].get_height();
+		}
+	}
+	return height;
+}
+
 /// @desc Return the combined string length of a list of text structs.
 function text_list_length(list) {
 	var result = 0;

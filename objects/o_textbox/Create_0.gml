@@ -2,7 +2,7 @@ text = ds_list_create(); // ds_list of text structs
 cursor = 0;
 cursor_max = 0; // num of chars in text, set by set_text
 font_default = f_textbox_default;
-color_default = draw_get_color();
+color_default = c_white;
 effect_default = TB_EFFECT.NONE;
 
 /* Typing time is the time, in milliseconds, between each "type". Note that
@@ -19,13 +19,16 @@ chirp = snd_textbox_default;
 chirp_id = undefined;
 chirp_gain = 0;
 autoupdate = true;
-width = 800;
+width = 400;
 height = 700;
 alignment_h = fa_left;
+alignment_v = fa_center;
+text_height = 0; // used for bottom and center align
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
 	cursor_max = 0;
+	text_height = 0;
 	var font = font_default;
 	var color = color_default;
 	var effect = effect_default;
@@ -85,6 +88,7 @@ function set_text(text_string) {
 			// determine line break
 			if (text_list_width(line) + word_width > width) {
 				ds_list_add(text, line);
+				text_height += text_list_height(line);
 				cursor_max += text_list_length(line);
 				line = word;
 				if (space_found) list_add_text(line, " ", font, color, effect, index);
@@ -112,6 +116,7 @@ function set_text(text_string) {
 		line_add_word(line, word);
 		ds_list_add(text, line);
 		cursor_max += text_list_length(line);
+		text_height += text_list_height(line);
 	}
 	if (type_on_textset) cursor = cursor_max;
 	struct_list_destroy(word);
@@ -139,8 +144,16 @@ function command_get_effects(command_text, _font, _color, _effect) {
 	return { font: _font, clr: _color, effect: _effect };
 }
 
-/* Adds text to existing structs if the effects are the same, otherwise 
-creates new ones. */
+/// @desc Return true if effect, color, and font of 2 text structs are the same.
+function text_struct_equal(a, b) {
+	var result = true;
+	if (a.font != b.font) result = false;
+	if (a.text_color != b.text_color) result = false;
+	if (a.effect != b.effect) result = false;
+	return result;
+}
+
+/// @desc Add text to existing structs if the effects are the same, otherwise create new ones.
 function line_add_word(line, word) {
 	if (ds_list_size(line) == 0) {
 		for (var i = 0; i < ds_list_size(word); i++) ds_list_add(line, word[|i]);
@@ -148,11 +161,8 @@ function line_add_word(line, word) {
 	} 
 	for (var i = 0; i < ds_list_size(word); i++) {
 		var last_struct = line[|ds_list_size(line) - 1];
-		if (last_struct.font == word[|i].font &&
-			last_struct.text_color == word[|i].text_color &&
-			last_struct.effect  == word[|i].effect &&
-			word[|i].effect != TB_EFFECT.WAVE &&
-			word[|i].effect != TB_EFFECT.SHAKE) {
+		var word_struct = word[|i];
+		if ((text_struct_equal(last_struct, word_struct)) && (word[|i].effect != TB_EFFECT.WAVE) && (word[|i].effect != TB_EFFECT.SHAKE)) {
 			last_struct.add_text(word[|i].text);
 		} else ds_list_add(line, word[|i]);
 	}
@@ -191,11 +201,13 @@ function list_add_text(list, text, font, color, effect, index) {
 	}
 	
 	var last_struct = list[|ds_list_size(list) - 1];
-	if (last_struct.font == font &&
-		last_struct.text_color == color &&
-		last_struct.effect  == effect) {
+	if ((last_struct.font == font) &&
+		(last_struct.text_color == color) &&
+		(last_struct.effect  == effect)) {
 			last_struct.add_text(text);
-	} else ds_list_add(list, new tb_text(font, color, effect, text, index));
+	} else {
+		ds_list_add(list, new tb_text(font, color, effect, text, index));
+	}
 }
 
 function tb_get_color(new_color) {
@@ -263,7 +275,6 @@ function text_char_at(ichar) {
 
 /// @desc Determine character typing, and update char structs.
 function update() {
-	
 	if (cursor < cursor_max) {
 		if (typing_time <= 0) {
 			typing_time = typing_time_default;

@@ -1,10 +1,6 @@
 draw_set_valign(fa_top);
 draw_set_halign(fa_left);
 
-// x/y values are magic numbers for now
-var _x = x;
-var _y = y;
-
 draw_set_color(c_gray);
 draw_rectangle(x, y, x + width, y + height, true);
 
@@ -14,6 +10,11 @@ length of the struct at irow/ichar from _cursor_char. once
 the length of the struct is larger than _cursor_char, we
 draw the correct portion of the struct, and we are done. */
 var _cursor_char = floor(cursor);
+
+var _x = x;
+var _y = y;
+if (alignment_v == fa_bottom) _y = y + height - text_height;
+if (alignment_v == fa_center) _y = y + height / 2 - text_height / 2;
 
 for (var irow = 0; irow < ds_list_size(text); irow++) {
 	if (alignment_h == fa_left) _x = x;
