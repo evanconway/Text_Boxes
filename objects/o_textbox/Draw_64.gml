@@ -4,8 +4,6 @@ draw_set_halign(fa_left);
 var _x = 0;
 var _y = 40;
 
-var test = text_char_at(60);
-
 /* To draw the text, we iterate over each row and struct
 in the 2D text list. Each time, we subtract the string
 length of the struct at irow/ichar from _cursor_char. once

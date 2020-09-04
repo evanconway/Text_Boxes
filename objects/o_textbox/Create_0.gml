@@ -9,7 +9,7 @@ typing_frames_pause = typing_frames * 10;
 typing_increment = 1.7; // how far to increase cursor each increment
 typing_time = typing_frames;
 autoupdate = true;
-width = 1000;
+width = 800;
 height = 700;
 alignment = TB_ALIGN.LEFT;
 
@@ -25,36 +25,60 @@ function set_text(text_string) {
 	var line = ds_list_create();
 	var word = ds_list_create();
 	
-	// iterate over every character in the string
-	for (var i = 1; i <= string_length(text_string); i++) {
-		var c = string_char_at(text_string, i);
+	var index = 1;
+	var total_length = string_length(text_string);
+	while (index <= total_length) {
+		/* As a design choice, end_i and text_end_i will always be set to the last
+		character in the parse, INCLUSIVE. So for commands, end_i will be the the
+		index of ">". For text, end_i will the location of the next space, the 
+		character just before the next "<", or the last character in the string.*/
 		
-		// determine if checking for text or effect tags
-		if (c == "<") {
-			var end_i = htmlsafe_string_pos_ext(">", text_string, i + 1);
-			var command_text = string_copy(text_string, i + 1, end_i - i - 1);
+		if (string_char_at(text_string, index) == "<") {
+			var end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
+			if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
+			var command_text = string_copy(text_string, index + 1, end_i - index - 1);
 			var effects = command_get_effects_arr(command_text, font, color, effect);
 			font = effects[@ 0];
 			color = effects[@ 1];
 			effect = effects[@ 2];
-			i = end_i;
+			index = end_i + 1;
 		} else {
 			
-			// add character logic
-			if (c == " ") {
-				var line_width = text_list_width(line);
-				var word_width = text_list_width(word);
-				if (line_width + word_width > width) {
-					ds_list_add(text, line);
-					word_add_char(word, c, font, color, effect, i); // add space after checking width
-					line = word;
-					word = ds_list_create();
-				} else {
-					word_add_char(word, c, font, color, effect, i);
-					line_add_word(line, word); // the word list still exists after this
-					struct_list_clear(word);
-				}
-			} else word_add_char(word, c, font, color, effect, i);
+			/* We only parse up to the start of the next tag, or the end of the text_string.
+			We subract 1 from the found value because our end_i must always be inclusive. 
+			If there is no remaining tags, we set the end of parse to the end of the string.
+			Note that we check for <= 0 because, although string_pos_ext returns 0 if no 
+			value is found, we are subtracting 1 from it. So the not found value will be
+			-1. Finally, for this code, there is no situation where "<" could be at index
+			1, so we can ignore that edge case. */
+			var parse_end_i = htmlsafe_string_pos_ext("<", text_string, index) - 1;
+			if (parse_end_i <= 0) parse_end_i = total_length;
+			
+			/* To ensure correct line breaks, we have to get all the text from index to the next space,
+			or the end of the parsable text. We have to keep track of whether we found a space or not
+			because we don't include spaces when checking word width for line breaks. The space must
+			be added back once the word position is determined. */
+			var end_i = htmlsafe_string_pos_ext(" ", text_string, index);
+			var space_found = (end_i > 0 && end_i <= parse_end_i) ? true : false;
+			if (end_i > parse_end_i || end_i == 0) end_i = parse_end_i;
+			
+			// The text we add to the word at first must not include the space.
+			var text_toadd_length = (space_found) ? end_i - index : end_i - index + 1;
+			var text_toadd = string_copy(text_string, index, text_toadd_length);
+			
+			word_add_text(word, text_toadd, font, color, effect, index);
+			var word_width = text_list_width(word); // note that space is added after
+			if (space_found) word_add_text(word, " ", font, color, effect, index);
+			if (text_list_width(line) + word_width > width) {
+				ds_list_add(text, line);
+				line = word;
+				word = ds_list_create();
+			} else {
+				line_add_word(line, word);
+				struct_list_clear(word);
+			}
+			
+			index = end_i + 1;
 		}
 	}
 	
@@ -123,19 +147,30 @@ function struct_list_clear(list) {
 
 /* Adds text to existing structs if the effects are the same, otherwise 
 creates new ones. */
-function word_add_char(word, character, font, color, effect, index) {
-	if (ds_list_size(word) == 0) {
-		ds_list_add(word, new tb_text(font, color, effect, character, index));
+function word_add_text(word, text, font, color, effect, index) {
+	
+	if (effect == TB_EFFECT.WAVE || effect == TB_EFFECT.SHAKE) {
+		for (var i = 1; i <= string_length(text); i++) {
+			var c = string_char_at(text, i);
+			ds_list_add(word, new tb_text(font, color, effect, c, index + i));
+		}
 		return;
 	}
+	
+	// if word is empty, add new struct
+	if (ds_list_size(word) == 0) {
+		ds_list_add(word, new tb_text(font, color, effect, text, index));
+		return;
+	}
+	
 	var last_struct = word[|ds_list_size(word) - 1];
 	if (last_struct.font == font &&
 		last_struct.text_color == color &&
-		last_struct.effect  == effect &&
-		effect != TB_EFFECT.WAVE &&
-		effect != TB_EFFECT.SHAKE) {
-			last_struct.add_text(character);
-	} else ds_list_add(word, new tb_text(font, color, effect, character, index));
+		last_struct.effect  == effect) {
+			last_struct.add_text(text);
+	} else {
+		ds_list_add(word, new tb_text(font, color, effect, text, index));
+	}
 }
 
 function tb_get_color(new_color) {
@@ -186,15 +221,6 @@ function tb_get_color(new_color) {
 /// @desc Returns true if given string contains only number characters.
 function is_number(s) {
 	return string_digits(s) == s;
-}
-
-/// @desc Return the combined string length of a list of text structs
-function text_struct_list_length(list) {
-	var result = 0;
-	for (var i = 0; i < ds_list_size(list); i++) {
-		result += string_length(list[|i].text);
-	}
-	return result;
 }
 
 /// @desc Return the character at the given character index.

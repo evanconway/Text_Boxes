@@ -21,6 +21,15 @@ function text_list_width(list) {
 	return width;
 }
 
+/// @desc Return the combined string length of a list of text structs.
+function text_struct_list_length(list) {
+	var result = 0;
+	for (var i = 0; i < ds_list_size(list); i++) {
+		result += string_length(list[|i].text);
+	}
+	return result;
+}
+
 /// @desc Create textbox text struct.
 /// @func tb_text(font, color, effect, *text, *index)
 function tb_text(fnt, col, fx) constructor {
@@ -130,5 +139,7 @@ string_pos, and ignores the starting index. */
 /// @desc same as string_pos_ext
 function htmlsafe_string_pos_ext(substr, str, startpos) {
 	var rest_of_string = string_delete(str, 1, startpos)
-	return string_pos(substr, rest_of_string) + startpos;
+	var pos = string_pos(substr, rest_of_string);
+	if (pos == 0) return 0;
+	return pos + startpos;
 }
