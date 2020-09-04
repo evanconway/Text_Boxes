@@ -1,4 +1,5 @@
 text = ds_list_create(); // ds_list of text structs
+text_original_string = undefined; // keep original string of set text
 cursor = 0;
 cursor_max = 0; // num of chars in text, set by set_text
 font_default = f_textbox_default;
@@ -12,21 +13,22 @@ typing_time_default = 100;
 typing_time_period = 500;
 typing_time_pause = 300;
 typing_time = typing_time_default;
-type_on_textset = true;
+type_on_textset = false;
 
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
 chirp_id = undefined;
-chirp_gain = 0;
+chirp_gain = 1;
 autoupdate = true;
 width = 400;
 height = 700;
-alignment_h = fa_left;
+alignment_h = fa_center;
 alignment_v = fa_center;
 text_height = 0; // used for bottom and center align
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
+	text_original_string = text_string;
 	cursor_max = 0;
 	text_height = 0;
 	var font = font_default;
@@ -87,6 +89,12 @@ function set_text(text_string) {
 			
 			// determine line break
 			if (text_list_width(line) + word_width > width) {
+				/* The text will have spaces at the end of lines when alignment_h is center.
+				So to ensure perfect center alignemnt, we remove 1 space (if it exists), from
+				the end of lines before adding them. */
+				var examine = text_list_string(line);
+				if (alignment_h == fa_center) line_remove_last_space(line);
+				examine = text_list_string(line);
 				ds_list_add(text, line);
 				text_height += text_list_height(line);
 				cursor_max += text_list_length(line);
@@ -100,7 +108,7 @@ function set_text(text_string) {
 				we add the space to the word, add the word to the line, and start the new word. 
 				But if it's right aligned, we add the word, then the line, and begin the next word
 				with the space starting it. */
-				if (alignment_h == fa_left) {
+				if ((alignment_h == fa_left) || (alignment_h == fa_center)) {
 					if (space_found) list_add_text(line, " ", font, color, effect, index);
 				}
 				if (alignment_h == fa_right) {
@@ -123,6 +131,32 @@ function set_text(text_string) {
 	return text;
 }
 
+/// @desc Set horizontal alignment of text.
+function set_align_h(new_align_h) {
+	if (new_align_h == alignment_h) {
+		return;
+	}
+	if ((new_align_h != fa_left) && (new_align_h != fa_right) && (new_align_h != fa_center)) {
+		show_error("Invalid alignment value!", true);
+		return;
+	}
+	alignment_h = new_align_h;
+	set_text(text_original_string);
+}
+
+/// @desc Set vertical alignment of text.
+function set_align_v(new_align_v) {
+	if (new_align_v == alignment_v) {
+		return;
+	}
+	if ((new_align_v != fa_top) && (new_align_v != fa_bottom) && (new_align_v != fa_center)) {
+		show_error("Invalid alignment value!", true);
+		return;
+	}
+	alignment_v = new_align_v;
+	set_text(text_original_string);
+}
+
 function command_get_effects(command_text, _font, _color, _effect) {
 	var command = "";
 	for (var i = 1; i <= string_length(command_text); i++) {
@@ -142,6 +176,21 @@ function command_get_effects(command_text, _font, _color, _effect) {
 		} else command += c;
 	}
 	return { font: _font, clr: _color, effect: _effect };
+}
+
+/// @desc Remove space at end of line, if it exists.
+function line_remove_last_space(line) {
+	if (ds_list_size(line) == 0) return;
+	var last_struct = line[|ds_list_size(line) - 1];
+	var text_length = string_length(last_struct.text);
+	var last_char = string_char_at(last_struct.text, text_length);
+	if (last_char == " ") {
+		if (text_length == 1) {
+			ds_list_delete(line, ds_list_size(line) - 1);
+		} else {
+			last_struct.set_text(string_delete(last_struct.text, text_length, 1));
+		}
+	}
 }
 
 /// @desc Return true if effect, color, and font of 2 text structs are the same.

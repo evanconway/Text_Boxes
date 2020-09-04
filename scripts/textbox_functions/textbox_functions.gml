@@ -91,6 +91,12 @@ function tb_text(fnt, col, fx) constructor {
 		calculate_height = true;
 	}
 	
+	function set_text(new_text) {
+		text = new_text;
+		calculate_width = true;
+		calculate_height = true;
+	}
+	
 	function get_width() {
 		if (calculate_width) {
 			draw_set_font(font);

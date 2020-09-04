@@ -19,6 +19,7 @@ if (alignment_v == fa_center) _y = y + height / 2 - text_height / 2;
 for (var irow = 0; irow < ds_list_size(text); irow++) {
 	if (alignment_h == fa_left) _x = x;
 	if (alignment_h == fa_right) _x = x + width - text_list_width(text[|irow]);
+	if (alignment_h == fa_center) _x = x + width / 2 - text_list_width(text[|irow]) / 2;
 	
 	var row_height = 0;
 	// irow is changed when we reach end of typing, so we store value here
