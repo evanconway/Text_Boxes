@@ -16,6 +16,7 @@ typing_time = typing_time_default;
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
 chirp_id = undefined;
+chirp_gain = 0;
 autoupdate = true;
 width = 800;
 height = 700;
@@ -251,12 +252,13 @@ function update() {
 	
 	if (cursor < cursor_max) {
 		if (typing_time <= 0) {
-			typing_time += typing_time_default;
+			typing_time = typing_time_default;
 			
 			if (chirp != undefined) {
 				if (chirp_id != undefined) audio_sound_gain(chirp_id, 0, 30);
 				//if (chirp_id != undefined) audio_stop_sound(chirp_id);
 				chirp_id = audio_play_sound(chirp, 1, false);
+				audio_sound_gain(chirp_id, chirp_gain, 0);
 			}
 			
 			/* increase character cursor. We iterate over the new
@@ -281,7 +283,7 @@ function update() {
 		
 		/* Note that delta_time is the time in microseconds since the last frame. Our
 		time variables are in milliseconds. */
-		typing_time -= delta_time/1000;
+		typing_time -= delta_time_debug()/1000;
 	}
 	
 	for (var i = 0; i < ds_list_size(text); i++) {
