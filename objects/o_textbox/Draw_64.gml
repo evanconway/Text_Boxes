@@ -19,11 +19,6 @@ for (var irow = 0; irow < ds_list_size(text); irow++) {
 	if (alignment_h == fa_left) _x = x;
 	if (alignment_h == fa_right) _x = x + width - text_list_width(text[|irow]);
 	
-	if (!drawgui_debug_printed) {
-		show_debug_message("Drawing row " + string(irow) + " at: " + string(_x));
-		show_debug_message(text_list_string(text[|irow]));
-	}
-	
 	var row_height = 0;
 	// irow is changed when we reach end of typing, so we store value here
 	var row_size = ds_list_size(text[|irow]);
@@ -49,5 +44,3 @@ for (var irow = 0; irow < ds_list_size(text); irow++) {
 	}
 	_y += row_height;
 }
-
-drawgui_debug_printed = true;

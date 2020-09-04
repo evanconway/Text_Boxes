@@ -1,7 +1,7 @@
 text = ds_list_create(); // ds_list of text structs
 cursor = 0;
 cursor_max = 0; // num of chars in text, set by set_text
-font_default = draw_get_font();
+font_default = f_textbox_default;
 color_default = draw_get_color();
 effect_default = TB_EFFECT.NONE;
 
@@ -21,9 +21,7 @@ chirp_gain = 0;
 autoupdate = true;
 width = 800;
 height = 700;
-alignment_h = fa_right;
-
-drawgui_debug_printed = false;
+alignment_h = fa_left;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
