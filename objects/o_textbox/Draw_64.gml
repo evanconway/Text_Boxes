@@ -9,7 +9,7 @@ in the 2D text list. Each time, we subtract the string
 length of the struct at irow/ichar from _cursor_char. once
 the length of the struct is larger than _cursor_char, we
 draw the correct portion of the struct, and we are done. */
-var _cursor_char = floor(cursor_char);
+var _cursor_char = floor(cursor);
 
 for (var irow = 0; irow < ds_list_size(text); irow++) {
 	_x = 40;

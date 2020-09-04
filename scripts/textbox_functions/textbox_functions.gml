@@ -22,7 +22,7 @@ function text_list_width(list) {
 }
 
 /// @desc Return the combined string length of a list of text structs.
-function text_struct_list_length(list) {
+function text_list_length(list) {
 	var result = 0;
 	for (var i = 0; i < ds_list_size(list); i++) {
 		result += string_length(list[|i].text);

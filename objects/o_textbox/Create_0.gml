@@ -1,13 +1,21 @@
 text = ds_list_create(); // ds_list of text structs
-cursor_char = 0;
+cursor = 0;
+cursor_max = 0; // num of chars in text, set by set_text
 font_default = draw_get_font();
 color_default = draw_get_color();
 effect_default = TB_EFFECT.NONE;
-typing_frames = 3.2; // frames between each "type", values less than 1 result in 0 frames
-typing_frames_period = typing_frames * 15;
-typing_frames_pause = typing_frames * 10;
-typing_increment = 1.7; // how far to increase cursor each increment
-typing_time = typing_frames;
+
+/* Typing time is the time, in milliseconds, between each "type". Note that
+if this value is less than the time it takes for one frame to execute, the 
+game will "type" once each frame. */
+typing_time_default = 100;
+typing_time_period = 500;
+typing_time_pause = 300;
+typing_time = typing_time_default;
+
+typing_increment = 2.2; // how far to increase cursor each increment
+chirp = snd_textbox_default;
+chirp_id = undefined;
 autoupdate = true;
 width = 800;
 height = 700;
@@ -15,6 +23,7 @@ alignment = TB_ALIGN.LEFT;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
+	cursor_max = 0;
 	var font = font_default;
 	var color = color_default;
 	var effect = effect_default;
@@ -28,19 +37,20 @@ function set_text(text_string) {
 	var index = 1;
 	var total_length = string_length(text_string);
 	while (index <= total_length) {
-		/* As a design choice, end_i and text_end_i will always be set to the last
-		character in the parse, INCLUSIVE. So for commands, end_i will be the the
-		index of ">". For text, end_i will the location of the next space, the 
-		character just before the next "<", or the last character in the string.*/
+		/* As a design choice, end_i will always be set to the last character in 
+		the parse, INCLUSIVE. So for commands, end_i will be the the index of ">". 
+		For text, end_i will the location of the next space, the character just 
+		before the next "<", or the last character in the string.*/
 		
 		if (string_char_at(text_string, index) == "<") {
 			var end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
 			if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
 			var command_text = string_copy(text_string, index + 1, end_i - index - 1);
-			var effects = command_get_effects_arr(command_text, font, color, effect);
-			font = effects[@ 0];
-			color = effects[@ 1];
-			effect = effects[@ 2];
+			var effects = command_get_effects(command_text, font, color, effect);
+			font = effects.font;
+			color = effects.clr;
+			effect = effects.effect;
+			delete effects;
 			index = end_i + 1;
 		} else {
 			
@@ -71,6 +81,7 @@ function set_text(text_string) {
 			if (space_found) word_add_text(word, " ", font, color, effect, index);
 			if (text_list_width(line) + word_width > width) {
 				ds_list_add(text, line);
+				cursor_max += text_list_length(line);
 				line = word;
 				word = ds_list_create();
 			} else {
@@ -86,12 +97,13 @@ function set_text(text_string) {
 	if (ds_list_size(line) >  0 || ds_list_size(word) > 0) {
 		line_add_word(line, word);
 		ds_list_add(text, line);
+		cursor_max += text_list_length(line);
 	}
 	struct_list_destroy(word);
 	return text;
 }
 
-function command_get_effects_arr(command_text, font, color, effect) {
+function command_get_effects(command_text, _font, _color, _effect) {
 	var command = "";
 	for (var i = 1; i <= string_length(command_text); i++) {
 		var c = string_char_at(command_text, i);
@@ -99,17 +111,17 @@ function command_get_effects_arr(command_text, font, color, effect) {
 		if (c == " " || i == string_length(command_text)) {
 			command = string_lower(command);
 			var new_color = tb_get_color(command);
-			if (new_color != undefined) color = new_color;
+			if (new_color != undefined) _color = new_color;
 			
-			// effects
-			if(command == "none") effect = TB_EFFECT.NONE;
-			else if(command == "wave") effect = TB_EFFECT.WAVE;
-			else if(command == "float") effect = TB_EFFECT.FLOAT;
-			else if(command == "shake") effect = TB_EFFECT.SHAKE;
+			// _effects
+			if(command == "none") _effect = TB_EFFECT.NONE;
+			else if(command == "wave") _effect = TB_EFFECT.WAVE;
+			else if(command == "float") _effect = TB_EFFECT.FLOAT;
+			else if(command == "shake") _effect = TB_EFFECT.SHAKE;
 			command = "";
 		} else command += c;
 	}
-	return [font, color, effect];
+	return { font: _font, clr: _color, effect: _effect };
 }
 
 /* Adds text to existing structs if the effects are the same, otherwise 
@@ -168,9 +180,7 @@ function word_add_text(word, text, font, color, effect, index) {
 		last_struct.text_color == color &&
 		last_struct.effect  == effect) {
 			last_struct.add_text(text);
-	} else {
-		ds_list_add(word, new tb_text(font, color, effect, text, index));
-	}
+	} else ds_list_add(word, new tb_text(font, color, effect, text, index));
 }
 
 function tb_get_color(new_color) {
@@ -238,29 +248,41 @@ function text_char_at(ichar) {
 
 /// @desc Determine character typing, and update char structs.
 function update() {
-	if (typing_time <= 0) {
-		typing_time += typing_frames;
-		
-		/* increase character cursor. We iterate over the new
-		"typing_increment" number of times. But we stop if we
-		encounter punctiation. */
-		var _typing_increment = typing_increment;
-		while (_typing_increment > 0) {
-			if (_typing_increment >= 1) cursor_char++;
-			else cursor_char += _typing_increment;
-			_typing_increment -= 1;
-			var char_at_cursor = text_char_at(cursor_char);
-			if (char_at_cursor == ".") {
-				_typing_increment = 0;
-				typing_time = typing_frames_period;
+	
+	if (cursor < cursor_max) {
+		if (typing_time <= 0) {
+			typing_time += typing_time_default;
+			
+			if (chirp != undefined) {
+				if (chirp_id != undefined) audio_sound_gain(chirp_id, 0, 30);
+				//if (chirp_id != undefined) audio_stop_sound(chirp_id);
+				chirp_id = audio_play_sound(chirp, 1, false);
 			}
-			if (char_at_cursor == "," || char_at_cursor == ";") {
-				_typing_increment = 0;
-				typing_time = typing_frames_pause;
+			
+			/* increase character cursor. We iterate over the new
+			"typing_increment" number of times. But we stop if we
+			encounter punctiation. */
+			var _typing_increment = typing_increment;
+			while (_typing_increment > 0) {
+				if (_typing_increment >= 1) cursor++;
+				else cursor += _typing_increment;
+				_typing_increment -= 1;
+				var char_at_cursor = text_char_at(cursor);
+				if (char_at_cursor == ".") {
+					_typing_increment = 0;
+					typing_time = typing_time_period;
+				}
+				if (char_at_cursor == "," || char_at_cursor == ";") {
+					_typing_increment = 0;
+					typing_time = typing_time_pause;
+				}
 			}
 		}
+		
+		/* Note that delta_time is the time in microseconds since the last frame. Our
+		time variables are in milliseconds. */
+		typing_time -= delta_time/1000;
 	}
-	typing_time--;
 	
 	for (var i = 0; i < ds_list_size(text); i++) {
 		for (var k = 0; k < ds_list_size(text[|i]); k++) {
