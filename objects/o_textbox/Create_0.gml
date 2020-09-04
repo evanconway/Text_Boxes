@@ -12,6 +12,7 @@ typing_time_default = 100;
 typing_time_period = 500;
 typing_time_pause = 300;
 typing_time = typing_time_default;
+type_on_textset = true;
 
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
@@ -20,7 +21,9 @@ chirp_gain = 0;
 autoupdate = true;
 width = 800;
 height = 700;
-alignment = TB_ALIGN.LEFT;
+alignment_h = fa_right;
+
+drawgui_debug_printed = false;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
@@ -60,16 +63,17 @@ function set_text(text_string) {
 			If there is no remaining tags, we set the end of parse to the end of the string.
 			Note that we check for <= 0 because, although string_pos_ext returns 0 if no 
 			value is found, we are subtracting 1 from it. So the not found value will be
-			-1. Finally, for this code, there is no situation where "<" could be at index
-			1, so we can ignore that edge case. */
+			-1. Finally, for this code, there is no situation where "<" could be at the
+			current index, so we can ignore that edge case. */
 			var parse_end_i = htmlsafe_string_pos_ext("<", text_string, index) - 1;
 			if (parse_end_i <= 0) parse_end_i = total_length;
 			
 			/* To ensure correct line breaks, we have to get all the text from index to the next space,
 			or the end of the parsable text. We have to keep track of whether we found a space or not
 			because we don't include spaces when checking word width for line breaks. The space must
-			be added back once the word position is determined. */
-			var end_i = htmlsafe_string_pos_ext(" ", text_string, index);
+			be added back once the word position is determined. Also, we start from index - 1 because 
+			the startpos parameter is exclusive. We need to be able to detect spaces by themselves. */
+			var end_i = htmlsafe_string_pos_ext(" ", text_string, index - 1);
 			var space_found = (end_i > 0 && end_i <= parse_end_i) ? true : false;
 			if (end_i > parse_end_i || end_i == 0) end_i = parse_end_i;
 			
@@ -77,19 +81,30 @@ function set_text(text_string) {
 			var text_toadd_length = (space_found) ? end_i - index : end_i - index + 1;
 			var text_toadd = string_copy(text_string, index, text_toadd_length);
 			
-			word_add_text(word, text_toadd, font, color, effect, index);
+			list_add_text(word, text_toadd, font, color, effect, index);
 			var word_width = text_list_width(word); // note that space is added after
-			if (space_found) word_add_text(word, " ", font, color, effect, index);
+			
+			// determine line break
 			if (text_list_width(line) + word_width > width) {
 				ds_list_add(text, line);
 				cursor_max += text_list_length(line);
 				line = word;
+				if (space_found) list_add_text(line, " ", font, color, effect, index);
 				word = ds_list_create();
 			} else {
 				line_add_word(line, word);
 				struct_list_clear(word);
+				/* Here is where text alignment comes into play. If the text is left aligned, 
+				we add the space to the word, add the word to the line, and start the new word. 
+				But if it's right aligned, we add the word, then the line, and begin the next word
+				with the space starting it. */
+				if (alignment_h == fa_left) {
+					if (space_found) list_add_text(line, " ", font, color, effect, index);
+				}
+				if (alignment_h == fa_right) {
+					if (space_found) list_add_text(word, " ", font, color, effect, index);
+				}
 			}
-			
 			index = end_i + 1;
 		}
 	}
@@ -100,6 +115,7 @@ function set_text(text_string) {
 		ds_list_add(text, line);
 		cursor_max += text_list_length(line);
 	}
+	if (type_on_textset) cursor = cursor_max;
 	struct_list_destroy(word);
 	return text;
 }
@@ -160,28 +176,28 @@ function struct_list_clear(list) {
 
 /* Adds text to existing structs if the effects are the same, otherwise 
 creates new ones. */
-function word_add_text(word, text, font, color, effect, index) {
-	
+function list_add_text(list, text, font, color, effect, index) {
+	if (text == "") return;
 	if (effect == TB_EFFECT.WAVE || effect == TB_EFFECT.SHAKE) {
 		for (var i = 1; i <= string_length(text); i++) {
 			var c = string_char_at(text, i);
-			ds_list_add(word, new tb_text(font, color, effect, c, index + i));
+			ds_list_add(list, new tb_text(font, color, effect, c, index + i));
 		}
 		return;
 	}
 	
-	// if word is empty, add new struct
-	if (ds_list_size(word) == 0) {
-		ds_list_add(word, new tb_text(font, color, effect, text, index));
+	// if list is empty, add new struct
+	if (ds_list_size(list) == 0) {
+		ds_list_add(list, new tb_text(font, color, effect, text, index));
 		return;
 	}
 	
-	var last_struct = word[|ds_list_size(word) - 1];
+	var last_struct = list[|ds_list_size(list) - 1];
 	if (last_struct.font == font &&
 		last_struct.text_color == color &&
 		last_struct.effect  == effect) {
 			last_struct.add_text(text);
-	} else ds_list_add(word, new tb_text(font, color, effect, text, index));
+	} else ds_list_add(list, new tb_text(font, color, effect, text, index));
 }
 
 function tb_get_color(new_color) {

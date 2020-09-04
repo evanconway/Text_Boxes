@@ -5,13 +5,6 @@ function textbox_delta_time() {
 	return (delta_time > max_time) ? max_time : delta_time;
 }
 
-// textbox enums
-enum TB_ALIGN {
-	LEFT,
-	RIGHT,
-	CENTER
-}
-
 enum TB_EFFECT {
 	WAVE,
 	FLOAT,
@@ -35,6 +28,15 @@ function text_list_length(list) {
 		result += string_length(list[|i].text);
 	}
 	return result;
+}
+
+/// @desc Return the combined string value of a list ot text structs.
+function text_list_string(list) {
+	var result = "'";
+	for (var i = 0; i < ds_list_size(list); i++) {
+		result += list[|i].text;
+	}
+	return result + "'";
 }
 
 /// @desc Create textbox text struct.

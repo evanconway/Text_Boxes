@@ -1,8 +1,12 @@
 draw_set_valign(fa_top);
 draw_set_halign(fa_left);
 
-var _x = 0;
-var _y = 40;
+// x/y values are magic numbers for now
+var _x = x;
+var _y = y;
+
+draw_set_color(c_gray);
+draw_rectangle(x, y, x + width, y + height, true);
 
 /* To draw the text, we iterate over each row and struct
 in the 2D text list. Each time, we subtract the string
@@ -12,12 +16,19 @@ draw the correct portion of the struct, and we are done. */
 var _cursor_char = floor(cursor);
 
 for (var irow = 0; irow < ds_list_size(text); irow++) {
-	_x = 40;
+	if (alignment_h == fa_left) _x = x;
+	if (alignment_h == fa_right) _x = x + width - text_list_width(text[|irow]);
+	
+	if (!drawgui_debug_printed) {
+		show_debug_message("Drawing row " + string(irow) + " at: " + string(_x));
+		show_debug_message(text_list_string(text[|irow]));
+	}
+	
 	var row_height = 0;
 	// irow is changed when we reach end of typing, so we store value here
 	var row_size = ds_list_size(text[|irow]);
-	for (var ichar = 0; ichar < row_size; ichar++) {
-		var text_struct = text[|irow][|ichar];
+	for (var istruct = 0; istruct < row_size; istruct++) {
+		var text_struct = text[|irow][|istruct];
 		draw_set_font(text_struct.font);
 		draw_set_color(text_struct.text_color);
 		var draw_x = _x + text_struct.draw_mod_x;
@@ -29,13 +40,14 @@ for (var irow = 0; irow < ds_list_size(text); irow++) {
 			draw_text(draw_x, draw_y, text_struct.text);
 		} else {
 			// if we reach this block, we have reached the end of typing
-			ichar = ds_list_size(text[|irow]);
+			istruct = ds_list_size(text[|irow]);
 			irow = ds_list_size(text);
 			var _text = string_copy(text_struct.text, 1, _cursor_char);
 			draw_text(draw_x, draw_y, _text);
 		}
-		
 		_x += text_struct.get_width();
 	}
 	_y += row_height;
 }
+
+drawgui_debug_printed = true;
