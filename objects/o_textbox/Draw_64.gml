@@ -28,6 +28,7 @@ for (var irow = 0; irow < ds_list_size(text); irow++) {
 		var text_struct = text[|irow][|istruct];
 		draw_set_font(text_struct.font);
 		draw_set_color(text_struct.text_color);
+		draw_set_alpha(text_struct.alpha);
 		var draw_x = _x + text_struct.draw_mod_x;
 		var draw_y = _y + text_struct.draw_mod_y;
 		if (text_struct.get_height() > row_height) row_height = text_struct.get_height();

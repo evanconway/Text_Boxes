@@ -314,7 +314,7 @@ function update() {
 	debug_delta_time();
 	if (cursor < cursor_max) {
 		if (typing_time <= 0) {
-			typing_time = typing_time_default;
+			typing_time += typing_time_default;
 			
 			if (chirp != undefined) {
 				if (chirp_id != undefined) audio_sound_gain(chirp_id, 0, 30);
@@ -335,11 +335,11 @@ function update() {
 				var char_at_cursor = text_char_at(cursor);
 				if (char_at_cursor == ".") {
 					_typing_increment = 0;
-					typing_time = typing_time_period;
+					typing_time += typing_time_period;
 				}
 				if (char_at_cursor == "," || char_at_cursor == ";") {
 					_typing_increment = 0;
-					typing_time = typing_time_pause;
+					typing_time += typing_time_pause;
 				}
 			}
 		}

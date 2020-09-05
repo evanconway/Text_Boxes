@@ -73,6 +73,7 @@ function tb_text(fnt, col, fx) constructor {
 	draw_mod_x = 0;
 	draw_mod_y = 0;
 	effect = fx;
+	alpha = 1;
 	
 	// effect specific vars
 	float_magnitude = 3;
@@ -88,6 +89,13 @@ function tb_text(fnt, col, fx) constructor {
 	shake_magnitude = 1; // x/y offset will be between negative and positive of this value, inclusive
 	shake_time_max = 80; // time in ms that character will be at a position
 	shake_time = shake_time_max;
+	
+	pulse_alpha_max = 1;
+	pulse_alpha_min = 0.4;
+	pulse_alpha = pulse_alpha_max;
+	pulse_increment = 0.05;
+	pulse_time_max = 300;
+	pulse_time = pulse_time_max;
 	
 	function add_text(new_text) {
 		text += new_text;
@@ -130,7 +138,7 @@ function tb_text(fnt, col, fx) constructor {
 			draw_mod_x = 0;
 			float_time -= global.DELTA_TIME / 1000;
 			if (float_time <= 0) {
-				float_time = float_time_max;
+				float_time += float_time_max;
 				float_value += pi/float_magnitude/4; // magic number
 				if (float_value > 2 * pi) float_value -= 2 * pi;
 			}
@@ -142,7 +150,7 @@ function tb_text(fnt, col, fx) constructor {
 			draw_mod_x = 0;
 			wave_time -= global.DELTA_TIME / 1000;
 			if (wave_time <= 0) {
-				wave_time = wave_time_max;
+				wave_time += wave_time_max;
 				wave_value += pi/wave_magnitude/4; // magic number
 				if (wave_value > 2 * pi) wave_value -= 2 * pi;
 			}
@@ -156,7 +164,7 @@ function tb_text(fnt, col, fx) constructor {
 		if (effect == TB_EFFECT.SHAKE) {
 			shake_time -= global.DELTA_TIME / 1000;
 			if (shake_time <= 0) {
-				shake_time = shake_time_max;
+				shake_time += shake_time_max;
 				draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);
 				draw_mod_y = irandom_range(shake_magnitude * -1, shake_magnitude);
 			}
