@@ -1,9 +1,9 @@
 global.TEXTBOX_DELTA_TIME = 0;
+global.JTT_DEBUGGING = false;
 
 function textbox_delta_time() {
 	global.TEXTBOX_DELTA_TIME = delta_time;
-	var debugging = false;
-	if (debugging) {
+	if (global.JTT_DEBUGGING) {
 		var max_time = 1000000/game_get_speed(gamespeed_fps);
 		if (global.TEXTBOX_DELTA_TIME > max_time) {
 			global.TEXTBOX_DELTA_TIME = max_time;
@@ -102,6 +102,7 @@ function JTT_Text() constructor {
 	
 	wave_magnitude = (has_fx) ? effects.wave_magnitude : 2;
 	wave_time_max = (has_fx) ? effects.wave_time_max : 50;
+	wave_offset = (has_fx) ? effects.wave_offset : 0.9;
 	wave_time = wave_time_max;
 	wave_value = 0;
 	
@@ -190,7 +191,7 @@ function JTT_Text() constructor {
 			/* Notice the index modifier in the sin function. This ensures that each character using this
 			effect recieves a slightly different position. This is the only real difference between the wave
 			and float effects. */
-			draw_mod_y = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
+			draw_mod_y = floor(sin(wave_value - index * wave_offset) * wave_magnitude + 0.5);
 		}
 		
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {

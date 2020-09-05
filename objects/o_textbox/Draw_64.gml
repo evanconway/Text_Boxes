@@ -1,7 +1,7 @@
 draw_set_valign(fa_top);
 draw_set_halign(fa_left);
 
-if (jtt_debugging) {
+if (global.JTT_DEBUGGING) {
 	draw_set_color(c_gray);
 	draw_set_alpha(1);
 	var box_x = x;

@@ -25,7 +25,6 @@ alignment_text_v = fa_top;
 text_height = 0; // used for bottom and center align
 alignment_box_h = fa_left;
 alignment_box_v = fa_top;
-jtt_debugging = false;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
@@ -221,7 +220,7 @@ function list_add_text(list, text, effects, index) {
 /// @desc Return color based on command text.
 function tb_get_color(new_color) {
 	var color_change = undefined;
-	if (new_color == "default") color_change = effects_default.text_color;
+	if (new_color == "no_color") color_change = effects_default.text_color;
 	else if (new_color == "aqua") color_change = c_aqua;
 	else if (new_color == "black") color_change = c_black;
 	else if (new_color == "blue") color_change = c_blue;
@@ -282,6 +281,29 @@ function command_apply_effects(command_text, _effects) {
 		if (i == string_length(command_text)) command += c;
 		if (c == " " || i == string_length(command_text)) {
 			command = string_lower(command);
+			/* At this point, the "command" string could also include any parameters. The start of 
+			parameters is indicated with a colon, and each parameter is separated by a comma. These 
+			must be parsed out. */
+			var param_i = string_pos(":", command);
+			var params = ds_list_create();
+			if (param_i > 0) {
+				// colon found, parse parameters
+				var parameter = "";
+				for (var k = param_i; k <= string_length(command); k++) {
+					var c = string_char_at(command, k);
+					if (k == string_length(command)) parameter += c;
+					if ((c == ",") || (k == string_length(command))) {
+						/* Parameter complete, note that all effect parameters are numbers,
+						so we convert to number before adding to params list. */
+						ds_list_add(params, string_digits(parameter));
+						parameter = "";
+					} else {
+						parameter += c;
+					}
+				}
+				command = string_copy(command, 1, param_i - 1);
+			}
+			
 			var new_color = tb_get_color(command);
 			if (new_color != undefined) new_effects.text_color = new_color;
 			
@@ -289,7 +311,13 @@ function command_apply_effects(command_text, _effects) {
 			if (command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
 			else if (command == "wave") new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
 			else if (command == "float") new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
-			else if (command == "shake") new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
+			else if (command == "shake") {
+				new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
+				if (params[|0] != undefined) new_effects.shake_magnitude = params[|0];
+				new_effects.shake_magnitude = clamp(new_effects.shake_magnitude, 1, 10000);
+				if (params[|1] != undefined) new_effects.shake_time_max = params[|1];
+				new_effects.shake_time_max = clamp(new_effects.shake_time_max, 1, 10000);
+			}
 			else if (command == "wshake") new_effects.effect_m = TB_EFFECT_MOVE.WSHAKE;
 			
 			// alpha effects
@@ -301,8 +329,11 @@ function command_apply_effects(command_text, _effects) {
 			if (command == "no_color") new_effects.effect_c = TB_EFFECT_COLOR.NONE;
 			else if (command == "chromatic") new_effects.effect_c = TB_EFFECT_COLOR.CHROMATIC;
 			
+			ds_list_destroy(params);
 			command = "";
-		} else command += c;
+		} else {
+			command += c;
+		}
 	}
 	return new_effects;
 }
