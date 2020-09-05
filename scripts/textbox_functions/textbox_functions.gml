@@ -1,10 +1,12 @@
-function debug_delta_time() {
-	global.DELTA_TIME = delta_time;
-	var debugging = false;
+global.TEXTBOX_DELTA_TIME = 0;
+
+function textbox_delta_time() {
+	global.TEXTBOX_DELTA_TIME = delta_time;
+	var debugging = true;
 	if (debugging) {
 		var max_time = 1000000/game_get_speed(gamespeed_fps);
-		if (global.DELTA_TIME > max_time) {
-			global.DELTA_TIME = max_time;
+		if (global.TEXTBOX_DELTA_TIME > max_time) {
+			global.TEXTBOX_DELTA_TIME = max_time;
 		}
 	}
 }
@@ -13,6 +15,8 @@ enum TB_EFFECT {
 	WAVE,
 	FLOAT,
 	SHAKE,
+	WSHAKE,
+	PULSE,
 	NONE
 }
 
@@ -92,9 +96,8 @@ function tb_text(fnt, col, fx) constructor {
 	
 	pulse_alpha_max = 1;
 	pulse_alpha_min = 0.4;
-	pulse_alpha = pulse_alpha_max;
 	pulse_increment = 0.05;
-	pulse_time_max = 300;
+	pulse_time_max = 80;
 	pulse_time = pulse_time_max;
 	
 	function add_text(new_text) {
@@ -136,24 +139,43 @@ function tb_text(fnt, col, fx) constructor {
 		
 		if (effect == TB_EFFECT.FLOAT) {
 			draw_mod_x = 0;
-			float_time -= global.DELTA_TIME / 1000;
 			if (float_time <= 0) {
 				float_time += float_time_max;
 				float_value += pi/float_magnitude/4; // magic number
 				if (float_value > 2 * pi) float_value -= 2 * pi;
 			}
+			float_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			draw_mod_y = floor(sin(float_value) * float_magnitude + 0.5);
+			return;
+		}
+		
+		if (effect == TB_EFFECT.PULSE) {
+			draw_mod_x = 0;
+			draw_mod_y = 0;
+			if (pulse_time <= 0) {
+				pulse_time += pulse_time_max;
+				alpha += pulse_increment;
+				if (alpha > pulse_alpha_max) {
+					alpha = pulse_alpha_max;
+					pulse_increment *= -1;
+				}
+				if (alpha < pulse_alpha_min) {
+					alpha = pulse_alpha_min;
+					pulse_increment *= -1;
+				}
+			}
+			pulse_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			return;
 		}
 		
 		if (effect == TB_EFFECT.WAVE) {
 			draw_mod_x = 0;
-			wave_time -= global.DELTA_TIME / 1000;
 			if (wave_time <= 0) {
 				wave_time += wave_time_max;
 				wave_value += pi/wave_magnitude/4; // magic number
 				if (wave_value > 2 * pi) wave_value -= 2 * pi;
 			}
+			wave_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			/* Notice the index modifier in the sin function. This ensures that each character using this
 			effect recieves a slightly different position. This is the only real difference between the wave
 			and float effects. */
@@ -161,13 +183,13 @@ function tb_text(fnt, col, fx) constructor {
 			return;
 		}
 		
-		if (effect == TB_EFFECT.SHAKE) {
-			shake_time -= global.DELTA_TIME / 1000;
+		if ((effect == TB_EFFECT.SHAKE) || (effect == TB_EFFECT.WSHAKE)) {
 			if (shake_time <= 0) {
 				shake_time += shake_time_max;
 				draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);
 				draw_mod_y = irandom_range(shake_magnitude * -1, shake_magnitude);
 			}
+			shake_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			return;
 		}
 	}

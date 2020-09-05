@@ -3,7 +3,7 @@ text_original_string = undefined; // keep original string of set text
 cursor = 0;
 cursor_max = 0; // num of chars in text, set by set_text
 font_default = f_textbox_default;
-color_default = c_white;
+color_default = c_ltgray;
 effect_default = TB_EFFECT.NONE;
 
 /* Typing time is the time, in milliseconds, between each "type". Note that
@@ -13,7 +13,7 @@ typing_time_default = 100;
 typing_time_period = 500;
 typing_time_pause = 300;
 typing_time = typing_time_default;
-type_on_textset = false;
+type_on_textset = true;
 
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
@@ -144,27 +144,6 @@ function set_align_v(new_align_v) {
 	alignment_v = new_align_v;
 }
 
-function command_get_effects(command_text, _font, _color, _effect) {
-	var command = "";
-	for (var i = 1; i <= string_length(command_text); i++) {
-		var c = string_char_at(command_text, i);
-		if (i == string_length(command_text)) command += c;
-		if (c == " " || i == string_length(command_text)) {
-			command = string_lower(command);
-			var new_color = tb_get_color(command);
-			if (new_color != undefined) _color = new_color;
-			
-			// _effects
-			if(command == "none") _effect = TB_EFFECT.NONE;
-			else if(command == "wave") _effect = TB_EFFECT.WAVE;
-			else if(command == "float") _effect = TB_EFFECT.FLOAT;
-			else if(command == "shake") _effect = TB_EFFECT.SHAKE;
-			command = "";
-		} else command += c;
-	}
-	return { font: _font, clr: _color, effect: _effect };
-}
-
 /// @desc Remove space at end of line, if it exists.
 function line_remove_last_space(line) {
 	if (ds_list_size(line) == 0) return;
@@ -252,6 +231,7 @@ function tb_get_color(new_color) {
 	else if (new_color == "aqua") color_change = c_aqua;
 	else if (new_color == "black") color_change = c_black;
 	else if (new_color == "blue") color_change = c_blue;
+	else if (new_color == "brown") color_change = make_color_rgb(102, 51, 0);
 	else if (new_color == "dkgray") color_change = c_dkgray;
 	else if (new_color == "fuchsia") color_change = c_fuchsia;
 	else if (new_color == "gray") color_change = c_gray;
@@ -291,6 +271,39 @@ function tb_get_color(new_color) {
 	return color_change;
 }
 
+/// @desc Return struct of new effects.
+function command_get_effects(command_text, _font, _color, _effect) {
+	if (command_text == "") {
+		return { font: font_default, clr: color_default, effect: color_default };
+	}
+	var command = "";
+	for (var i = 1; i <= string_length(command_text); i++) {
+		var c = string_char_at(command_text, i);
+		if (i == string_length(command_text)) command += c;
+		if (c == " " || i == string_length(command_text)) {
+			command = string_lower(command);
+			var new_color = tb_get_color(command);
+			if (new_color != undefined) _color = new_color;
+			
+			// _effects
+			if(command == "none") _effect = TB_EFFECT.NONE;
+			else if (command == "wave") _effect = TB_EFFECT.WAVE;
+			else if (command == "float") _effect = TB_EFFECT.FLOAT;
+			else if (command == "shake") _effect = TB_EFFECT.SHAKE;
+			else if (command == "wshake") _effect = TB_EFFECT.WSHAKE;
+			else if (command == "pulse") _effect = TB_EFFECT.PULSE;
+			
+			if (command == "reset") {
+				_font = font_default;
+				_color = color_default;
+				_effect = effect_default;
+			}
+			command = "";
+		} else command += c;
+	}
+	return { font: _font, clr: _color, effect: _effect };
+}
+
 /// @desc Returns true if given string contains only number characters.
 function is_number(s) {
 	return string_digits(s) == s;
@@ -311,7 +324,7 @@ function text_char_at(ichar) {
 
 /// @desc Determine character typing, and update char structs.
 function update() {
-	debug_delta_time();
+	textbox_delta_time();
 	if (cursor < cursor_max) {
 		if (typing_time <= 0) {
 			typing_time += typing_time_default;
@@ -346,7 +359,7 @@ function update() {
 		
 		/* Note that delta_time is the time in microseconds since the last frame. Our
 		time variables are in milliseconds. */
-		typing_time -= global.DELTA_TIME / 1000;
+		typing_time -= global.TEXTBOX_DELTA_TIME / 1000;
 	}
 	
 	for (var i = 0; i < ds_list_size(text); i++) {

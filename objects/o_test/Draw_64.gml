@@ -2,7 +2,7 @@
 // You can write your code in this editor
 
 var arr_length = array_length(delta_vals);
-delta_vals[@delta_index] = global.DELTA_TIME;
+delta_vals[@delta_index] = global.TEXTBOX_DELTA_TIME;
 delta_index += 1;
 if (delta_index >= arr_length) delta_index = 0;
 
