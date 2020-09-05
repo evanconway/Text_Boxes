@@ -18,7 +18,6 @@ for (var i = 0; i < arr_length; i++) {
 delta_avg = floor(delta_avg / arr_length + 0.5);
 var delta_diff = delta_max - delta_min;
 
-draw_set_font(f_textbox_default);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 draw_set_color(c_lime);

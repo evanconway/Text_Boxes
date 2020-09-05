@@ -3,7 +3,7 @@
   "glyphOperations": 0,
   "interpreter": 0,
   "pointRounding": 0,
-  "fontName": "Bahnschrift",
+  "fontName": "Arial",
   "styleName": "Regular",
   "size": 14.0,
   "bold": false,
@@ -123,7 +123,7 @@
     {"lower":32,"upper":127,},
     {"lower":9647,"upper":9647,},
   ],
-  "regenerateBitmap": false,
+  "regenerateBitmap": true,
   "canGenerateBitmap": true,
   "maintainGms1Font": false,
   "parent": {
@@ -131,7 +131,7 @@
     "path": "folders/Text_Boxes.yy",
   },
   "resourceVersion": "1.0",
-  "name": "f_textbox_default",
+  "name": "f_jtt_default",
   "tags": [],
   "resourceType": "GMFont",
 }

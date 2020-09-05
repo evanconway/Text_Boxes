@@ -68,18 +68,20 @@ function text_list_string(list) {
 }
 
 /// @desc Create textbox text struct.
-/// @func tb_text(font, color, effect_move, effect_alpha, effect_color, *text, *index)
-function tb_text(fnt, col, fx_m, fx_a, fx_c) constructor {
-	text = "";
-	if (argument_count > 5) text = argument[5];
-	font = fnt;
+/// @func JTT_Text(*text, *effects, *index)
+function JTT_Text() constructor {
+	text = (argument_count > 0) ? argument[0] : "";
+	
+	var has_fx = (argument_count > 1) ? true : false;
+	var effects = (has_fx) ? argument[1] : undefined;
+	
+	font = (has_fx) ? effects.font : f_jtt_default;
 	
 	/* We keep track of the index because it lets us easily offset different
 	effects from other characters if necessary. The wave is a good example. */
-	index = 0;
-	if (argument_count > 6) index = argument[6];
+	index = (argument_count > 2) ? argument[2] : 0;
 	
-	text_color = col;
+	text_color = (has_fx) ? effects.text_color : c_ltgray;
 	draw_color = text_color;
 	width = 0;
 	height = 0;
@@ -87,42 +89,42 @@ function tb_text(fnt, col, fx_m, fx_a, fx_c) constructor {
 	calculate_height = true;
 	draw_mod_x = 0;
 	draw_mod_y = 0;
-	effect_m = fx_m;
-	effect_a = fx_a;
-	effect_c = fx_c;
+	effect_m = (has_fx) ? effects.effect_m : TB_EFFECT_MOVE.NONE;
+	effect_a = (has_fx) ? effects.effect_a : TB_EFFECT_ALPHA.NONE;
+	effect_c = (has_fx) ? effects.effect_c : TB_EFFECT_COLOR.NONE;
 	alpha = 1;
 	
 	// movement effects
-	float_magnitude = 3;
-	float_time_max = 50;
+	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
+	float_time_max = (has_fx) ? effects.float_time_max : 50;
 	float_time = float_time_max;
 	float_value = 0;
 	
-	wave_magnitude = 2;
-	wave_time_max = 50;
+	wave_magnitude = (has_fx) ? effects.wave_magnitude : 2;
+	wave_time_max = (has_fx) ? effects.wave_time_max : 50;
 	wave_time = wave_time_max;
 	wave_value = 0;
 	
-	shake_magnitude = 1; // x/y offset will be between negative and positive of this value, inclusive
-	shake_time_max = 80; // time in ms that character will be at a position
+	shake_magnitude = (has_fx) ? effects.shake_magnitude : 1; // x/y offset will be between negative and positive of this value, inclusive
+	shake_time_max = (has_fx) ? effects.shake_time_max : 80; // time in ms that character will be at a position
 	shake_time = shake_time_max;
 	
 	// alpha effects
-	pulse_alpha_max = 1;
-	pulse_alpha_min = 0.4;
-	pulse_increment = 0.05;
-	pulse_time_max = 80;
+	pulse_alpha_max = (has_fx) ? effects.pulse_alpha_max : 1;
+	pulse_alpha_min = (has_fx) ? effects.pulse_alpha_min : 0.4;
+	pulse_increment = (has_fx) ? effects.pulse_increment : 0.05;
+	pulse_time_max = (has_fx) ? effects.pulse_time_max : 80;
 	pulse_time = pulse_time_max;
 	
-	blink_time_max = 400;
+	blink_time_max = (has_fx) ? effects.blink_time_max : 400;
 	blink_time = blink_time_max;
 	
 	// color effects
-	chromatic_increment = 10;
-	chromatic_time_max = 30;
+	chromatic_increment = (has_fx) ? effects.chromatic_increment : 10;
+	chromatic_time_max = (has_fx) ? effects.chromatic_time_max : 30;
 	chromatic_time = chromatic_time_max;
-	chromatic_max = 255;
-	chromatic_min = 0;
+	chromatic_max = (has_fx) ? effects.chromatic_max : 255;
+	chromatic_min = (has_fx) ? effects.chromatic_min : 0;
 	chromatic_r = chromatic_max;
 	chromatic_g = chromatic_min;
 	chromatic_b = chromatic_min;
@@ -280,6 +282,38 @@ function tb_text(fnt, col, fx_m, fx_a, fx_c) constructor {
 			chromatic_time -= global.TEXTBOX_DELTA_TIME / 1000;
 		}
 	}
+}
+
+/// @desc Return true if given text requires 1 struct per character
+function jtt_text_req_ind_struct(text_struct) {
+	if (text_struct.effect_m == TB_EFFECT_MOVE.SHAKE) return true;
+	if (text_struct.effect_m == TB_EFFECT_MOVE.WAVE) return true;
+	return false;
+}
+
+/// @desc Return true if effect values of given text structs are equal
+function jtt_text_fx_equal(a, b) {
+	if (a.font != b.font) return false;
+	if (a.text_color != b.text_color) return false;
+	if (a.effect_m != b.effect_m) return false;
+	if (a.effect_a != b.effect_a) return false;
+	if (a.effect_c != b.effect_c) return false;
+	if (a.float_magnitude != b.float_magnitude) return false;
+	if (a.float_time_max != b.float_time_max) return false;
+	if (a.wave_magnitude != b.wave_magnitude) return false;
+	if (a.wave_time_max != b.wave_time_max) return false;
+	if (a.shake_magnitude != b.shake_magnitude) return false;
+	if (a.shake_time_max != b.shake_time_max) return false;
+	if (a.pulse_alpha_max != b.pulse_alpha_max) return false;
+	if (a.pulse_alpha_min != b.pulse_alpha_min ) return false;
+	if (a.pulse_increment != b.pulse_increment) return false;
+	if (a.pulse_time_max != b.pulse_time_max) return false;
+	if (a.blink_time_max != b.blink_time_max) return false;
+	if (a.chromatic_increment != b.chromatic_increment) return false;
+	if (a.chromatic_time_max != b.chromatic_time_max) return false;
+	if (a.chromatic_max != b.chromatic_max) return false;
+	if (a.chromatic_min != b.chromatic_min) return false;
+	return true;
 }
 
 /* string_pos_ext appears to be bugged in html builds for now. It behaves like

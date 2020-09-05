@@ -2,11 +2,7 @@ text = ds_list_create(); // ds_list of text structs
 text_original_string = undefined; // keep original string of set text
 cursor = 0;
 cursor_max = 0; // num of chars in text, set by set_text
-font_default = f_textbox_default;
-color_default = c_ltgray;
-effect_m_default = TB_EFFECT_MOVE.NONE;
-effect_a_default = TB_EFFECT_ALPHA.NONE;
-effect_c_default = TB_EFFECT_COLOR.NONE;
+effects_default = new JTT_Text(); // effect data is stored in an unused text struct
 
 /* Typing time is the time, in milliseconds, between each "type". Note that
 if this value is less than the time it takes for one frame to execute, the 
@@ -33,11 +29,7 @@ function set_text(text_string) {
 	text_original_string = text_string;
 	cursor_max = 0;
 	text_height = 0;
-	var font = font_default;
-	var color = color_default;
-	var effect_m = effect_m_default;
-	var effect_a = effect_a_default;
-	var effect_c = effect_c_default;
+	var effects = new JTT_Text("", effects_default); // effects copied from default
 	for (var i = 0; i < ds_list_size(text); i++) {
 		struct_list_destroy(text[|i]);
 	}
@@ -57,13 +49,7 @@ function set_text(text_string) {
 			var end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
 			if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
 			var command_text = string_copy(text_string, index + 1, end_i - index - 1);
-			var effects = command_get_effects(command_text, font, color, effect_m, effect_a, effect_c);
-			font = effects.font;
-			color = effects.clr;
-			effect_m = effects.effect_m;
-			effect_a = effects.effect_a;
-			effect_c = effects.effect_c;
-			delete effects;
+			effects = command_apply_effects(command_text, effects);
 			index = end_i + 1;
 		} else {
 			
@@ -90,7 +76,7 @@ function set_text(text_string) {
 			var text_toadd_length = (space_found) ? end_i - index : end_i - index + 1;
 			var text_toadd = string_copy(text_string, index, text_toadd_length);
 			
-			list_add_text(word, text_toadd, font, color, effect_m, effect_a, effect_c, index);
+			list_add_text(word, text_toadd, effects, index);
 			var word_width = text_list_width(word); // note that space is added after
 			
 			// determine line break
@@ -100,11 +86,11 @@ function set_text(text_string) {
 				text_height += text_list_height(line);
 				cursor_max += text_list_length(line);
 				line = word;
-				if (space_found) list_add_text(line, " ", font, color, effect_m, effect_a, effect_c, index);
+				if (space_found) list_add_text(line, " ", effects, index);
 				word = ds_list_create();
 			} else {
 				line_add_word(line, word);
-				if (space_found) list_add_text(line, " ", font, color, effect_m, effect_a, effect_c, index);
+				if (space_found) list_add_text(line, " ", effects, index);
 				struct_list_clear(word);
 			}
 			index = end_i + 1;
@@ -163,17 +149,6 @@ function line_remove_last_space(line) {
 	}
 }
 
-/// @desc Return true if effect, color, and font of 2 text structs are the same.
-function text_struct_equal(a, b) {
-	var result = true;
-	if (a.font != b.font) result = false;
-	if (a.text_color != b.text_color) result = false;
-	if (a.effect_m != b.effect_m) result = false;
-	if (a.effect_a != b.effect_a) result = false;
-	if (a.effect_c != b.effect_c) result = false;
-	return result;
-}
-
 /// @desc Add text to existing structs if the effects are the same, otherwise create new ones.
 function line_add_word(line, word) {
 	if (ds_list_size(line) == 0) {
@@ -183,10 +158,11 @@ function line_add_word(line, word) {
 	for (var i = 0; i < ds_list_size(word); i++) {
 		var last_struct = line[|ds_list_size(line) - 1];
 		var word_struct = word[|i];
-		if ((text_struct_equal(last_struct, word_struct)) && 
-			(!is_fx_ind_struct(word_struct.effect_m, word_struct.effect_a, word_struct.effect_c))) {
+		if (jtt_text_fx_equal(last_struct, word_struct) && !jtt_text_req_ind_struct(word_struct)) {
 			last_struct.add_text(word[|i].text);
-		} else ds_list_add(line, word[|i]);
+		} else {
+			ds_list_add(line, word[|i]);
+		}
 	}
 }
 
@@ -204,47 +180,35 @@ function struct_list_clear(list) {
 	ds_list_clear(list);
 }
 
-/* Adds text to existing structs if the effects are the same, otherwise 
-creates new ones. */
-function list_add_text(list, text, font, color, effect_m, effect_a, effect_c, index) {
+/// @desc Add text to existing structs if effects are the same, otherwise creates new ones.
+function list_add_text(list, text, effects, index) {
 	if (text == "") return;
-	if (is_fx_ind_struct(effect_m, effect_a, effect_c)) {
+	if (jtt_text_req_ind_struct(effects)) {
 		for (var i = 1; i <= string_length(text); i++) {
 			var c = string_char_at(text, i);
-			ds_list_add(list, new tb_text(font, color, effect_m, effect_a, effect_c, c, index + i));
+			ds_list_add(list, new JTT_Text(c, effects, index + i));
 		}
 		return;
 	}
 	
 	// if list is empty, add new struct
 	if (ds_list_size(list) == 0) {
-		ds_list_add(list, new tb_text(font, color, effect_m, effect_a, effect_c, text, index));
+		ds_list_add(list, new JTT_Text(text, effects, index));
 		return;
 	}
 	
 	var last_struct = list[|ds_list_size(list) - 1];
-	if ((last_struct.font == font) &&
-		(last_struct.text_color == color) &&
-		(last_struct.effect_m  == effect_m) &&
-		(last_struct.effect_a  == effect_a) &&
-		(last_struct.effect_c  == effect_c)) {
+	if (jtt_text_fx_equal(effects, last_struct)) {
 			last_struct.add_text(text);
 	} else {
-		ds_list_add(list, new tb_text(font, color, effect_m, effect_a, effect_c, text, index));
+		ds_list_add(list, new JTT_Text(text, effects, index));
 	}
 }
 
-/// @desc Return true if given effects require individual structs.
-function is_fx_ind_struct(effect_m, effect_a, effect_c) {
-	var result = false;
-	if (effect_m == TB_EFFECT_MOVE.SHAKE) result = true;
-	if (effect_m == TB_EFFECT_MOVE.WAVE) result = true;
-	return result;
-}
-
+/// @desc Return color based on command text.
 function tb_get_color(new_color) {
 	var color_change = undefined;
-	if (new_color == "default") color_change = color_default;
+	if (new_color == "default") color_change = effects_default.text_color;
 	else if (new_color == "aqua") color_change = c_aqua;
 	else if (new_color == "black") color_change = c_black;
 	else if (new_color == "blue") color_change = c_blue;
@@ -288,16 +252,17 @@ function tb_get_color(new_color) {
 	return color_change;
 }
 
-/// @desc Return struct of new effects.
-function command_get_effects(command_text, _font, _color, _effect_m, _effect_a, _effect_c) {
+/// @desc Returns true if given string contains only number characters.
+function is_number(s) {
+	return string_digits(s) == s;
+}
+
+/// @desc Get new effects of given struct based on command_text.
+function command_apply_effects(command_text, _effects) {
 	if (command_text == "") {
-		return { font: font_default, 
-			clr: color_default, 
-			effect_m: effect_m_default, 
-			effect_a: effect_a_default,
-			effect_c: effect_c_default
-		};
+		return new JTT_Text();
 	}
+	var new_effects = new JTT_Text("", _effects);
 	var command = "";
 	for (var i = 1; i <= string_length(command_text); i++) {
 		var c = string_char_at(command_text, i);
@@ -305,38 +270,28 @@ function command_get_effects(command_text, _font, _color, _effect_m, _effect_a, 
 		if (c == " " || i == string_length(command_text)) {
 			command = string_lower(command);
 			var new_color = tb_get_color(command);
-			if (new_color != undefined) _color = new_color;
+			if (new_color != undefined) new_effects.text_color = new_color;
 			
 			// movement effects
-			if (command == "no_move") _effect_m = TB_EFFECT_MOVE.NONE;
-			else if (command == "wave") _effect_m = TB_EFFECT_MOVE.WAVE;
-			else if (command == "float") _effect_m = TB_EFFECT_MOVE.FLOAT;
-			else if (command == "shake") _effect_m = TB_EFFECT_MOVE.SHAKE;
-			else if (command == "wshake") _effect_m = TB_EFFECT_MOVE.WSHAKE;
+			if (command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
+			else if (command == "wave") new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
+			else if (command == "float") new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
+			else if (command == "shake") new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
+			else if (command == "wshake") new_effects.effect_m = TB_EFFECT_MOVE.WSHAKE;
 			
 			// alpha effects
-			if (command == "no_alpha") _effect_a = TB_EFFECT_ALPHA.NONE;
-			else if (command == "pulse") _effect_a = TB_EFFECT_ALPHA.PULSE;
-			else if (command == "blink") _effect_a = TB_EFFECT_ALPHA.BLINK;
+			if (command == "no_alpha") new_effects.effect_a = TB_EFFECT_ALPHA.NONE;
+			else if (command == "pulse") new_effects.effect_a = TB_EFFECT_ALPHA.PULSE;
+			else if (command == "blink") new_effects.effect_a = TB_EFFECT_ALPHA.BLINK;
 			
 			// color effects
-			if (command == "no_color") _effect_c = TB_EFFECT_COLOR.NONE;
-			else if (command == "chromatic") _effect_c = TB_EFFECT_COLOR.CHROMATIC;
+			if (command == "no_color") new_effects.effect_c = TB_EFFECT_COLOR.NONE;
+			else if (command == "chromatic") new_effects.effect_c = TB_EFFECT_COLOR.CHROMATIC;
 			
 			command = "";
 		} else command += c;
 	}
-	return { font: _font, 
-			clr: _color, 
-			effect_m: _effect_m, 
-			effect_a: _effect_a,
-			effect_c: _effect_c
-		};
-}
-
-/// @desc Returns true if given string contains only number characters.
-function is_number(s) {
-	return string_digits(s) == s;
+	return new_effects;
 }
 
 /// @desc Return the character at the given character index.
