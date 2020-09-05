@@ -297,10 +297,15 @@ function text_char_at(ichar) {
 function update() {
 	textbox_delta_time();
 	if (cursor < cursor_max) {
-		if (typing_time <= 0) {
+		
+		// run update logic until caught up
+		while (typing_time <= 0) {
 			typing_time += typing_time_default;
 			
-			if (chirp != undefined) {
+			/* Play typing chirp sound. Notice that we check if typing_time
+			is greater than 0 before running. We only update the audio if
+			typing_time has caught up. */
+			if ((chirp != undefined) && (typing_time > 0)) {
 				if (chirp_id != undefined) audio_sound_gain(chirp_id, 0, 30);
 				//if (chirp_id != undefined) audio_stop_sound(chirp_id);
 				chirp_id = audio_play_sound(chirp, 1, false);

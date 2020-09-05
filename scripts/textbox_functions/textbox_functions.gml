@@ -95,11 +95,6 @@ function JTT_Text() constructor {
 	alpha = 1;
 	
 	// movement effects
-	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
-	float_time_max = (has_fx) ? effects.float_time_max : 50;
-	float_time = float_time_max;
-	float_value = 0;
-	
 	wave_magnitude = (has_fx) ? effects.wave_magnitude : 2;
 	wave_time_max = (has_fx) ? effects.wave_time_max : 50;
 	wave_time = wave_time_max;
@@ -168,20 +163,9 @@ function JTT_Text() constructor {
 			draw_mod_y = 0;
 		}
 		
-		if (effect_m == TB_EFFECT_MOVE.FLOAT) {
+		if (effect_m == TB_EFFECT_MOVE.WAVE) || (effect_m == TB_EFFECT_MOVE.FLOAT) {
 			draw_mod_x = 0;
-			if (float_time <= 0) {
-				float_time += float_time_max;
-				float_value += pi/float_magnitude/4; // magic number
-				if (float_value > 2 * pi) float_value -= 2 * pi;
-			}
-			float_time -= global.TEXTBOX_DELTA_TIME / 1000;
-			draw_mod_y = floor(sin(float_value) * float_magnitude + 0.5);
-		}
-		
-		if (effect_m == TB_EFFECT_MOVE.WAVE) {
-			draw_mod_x = 0;
-			if (wave_time <= 0) {
+			while (wave_time <= 0) {
 				wave_time += wave_time_max;
 				wave_value += pi/wave_magnitude/4; // magic number
 				if (wave_value > 2 * pi) wave_value -= 2 * pi;
@@ -190,11 +174,16 @@ function JTT_Text() constructor {
 			/* Notice the index modifier in the sin function. This ensures that each character using this
 			effect recieves a slightly different position. This is the only real difference between the wave
 			and float effects. */
-			draw_mod_y = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
+			if (effect_m == TB_EFFECT_MOVE.WAVE) {
+				draw_mod_y = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
+			}
+			if (effect_m == TB_EFFECT_MOVE.FLOAT) {
+				draw_mod_y = floor(sin(wave_value) * wave_magnitude + 0.5);
+			}
 		}
 		
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {
-			if (shake_time <= 0) {
+			while (shake_time <= 0) {
 				shake_time += shake_time_max;
 				draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);
 				draw_mod_y = irandom_range(shake_magnitude * -1, shake_magnitude);
@@ -208,7 +197,7 @@ function JTT_Text() constructor {
 		}
 		
 		if (effect_a == TB_EFFECT_ALPHA.PULSE) {
-			if (pulse_time <= 0) {
+			while (pulse_time <= 0) {
 				pulse_time += pulse_time_max;
 				alpha += pulse_increment;
 				if (alpha > pulse_alpha_max) {
@@ -224,7 +213,7 @@ function JTT_Text() constructor {
 		}
 		
 		if (effect_a == TB_EFFECT_ALPHA.BLINK) {
-			if (blink_time <= 0) {
+			while (blink_time <= 0) {
 				blink_time += blink_time_max;
 				if (alpha == 1) alpha = 0;
 				else alpha = 1;
@@ -238,7 +227,7 @@ function JTT_Text() constructor {
 		}
 		
 		if (effect_c == TB_EFFECT_COLOR.CHROMATIC) {
-			if (chromatic_time <= 0) {
+			while (chromatic_time <= 0) {
 				chromatic_time += chromatic_time_max;
 				if (chromatic_state == 0) {
 					chromatic_g += chromatic_increment;
@@ -278,8 +267,8 @@ function JTT_Text() constructor {
 					}
 				}
 			}
-			draw_color = make_color_rgb(chromatic_r, chromatic_g, chromatic_b);
 			chromatic_time -= global.TEXTBOX_DELTA_TIME / 1000;
+			draw_color = make_color_rgb(chromatic_r, chromatic_g, chromatic_b);
 		}
 	}
 }
@@ -298,8 +287,6 @@ function jtt_text_fx_equal(a, b) {
 	if (a.effect_m != b.effect_m) return false;
 	if (a.effect_a != b.effect_a) return false;
 	if (a.effect_c != b.effect_c) return false;
-	if (a.float_magnitude != b.float_magnitude) return false;
-	if (a.float_time_max != b.float_time_max) return false;
 	if (a.wave_magnitude != b.wave_magnitude) return false;
 	if (a.wave_time_max != b.wave_time_max) return false;
 	if (a.shake_magnitude != b.shake_magnitude) return false;
