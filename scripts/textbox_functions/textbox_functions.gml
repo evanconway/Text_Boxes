@@ -58,7 +58,7 @@ function text_list_length(list) {
 	return result;
 }
 
-/// @desc Return the combined string value of a list ot text structs.
+/// @desc Return the combined string value of a list of text structs.
 function text_list_string(list) {
 	var result = "'";
 	for (var i = 0; i < ds_list_size(list); i++) {
@@ -95,6 +95,11 @@ function JTT_Text() constructor {
 	alpha = 1;
 	
 	// movement effects
+	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
+	float_time_max = (has_fx) ? effects.float_time_max : 50;
+	float_time = float_time_max;
+	float_value = 0;
+	
 	wave_magnitude = (has_fx) ? effects.wave_magnitude : 2;
 	wave_time_max = (has_fx) ? effects.wave_time_max : 50;
 	wave_time = wave_time_max;
@@ -163,7 +168,18 @@ function JTT_Text() constructor {
 			draw_mod_y = 0;
 		}
 		
-		if (effect_m == TB_EFFECT_MOVE.WAVE) || (effect_m == TB_EFFECT_MOVE.FLOAT) {
+		if (effect_m == TB_EFFECT_MOVE.FLOAT) {
+			draw_mod_x = 0;
+			while (float_time <= 0) {
+				float_time += float_time_max;
+				float_value += pi/float_magnitude/4; // magic number
+				if (float_value > 2 * pi) float_value -= 2 * pi;
+			}
+			float_time -= global.TEXTBOX_DELTA_TIME / 1000;
+			draw_mod_y = floor(sin(float_value) * float_magnitude + 0.5);
+		}
+		
+		if (effect_m == TB_EFFECT_MOVE.WAVE) {
 			draw_mod_x = 0;
 			while (wave_time <= 0) {
 				wave_time += wave_time_max;
@@ -174,12 +190,7 @@ function JTT_Text() constructor {
 			/* Notice the index modifier in the sin function. This ensures that each character using this
 			effect recieves a slightly different position. This is the only real difference between the wave
 			and float effects. */
-			if (effect_m == TB_EFFECT_MOVE.WAVE) {
-				draw_mod_y = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
-			}
-			if (effect_m == TB_EFFECT_MOVE.FLOAT) {
-				draw_mod_y = floor(sin(wave_value) * wave_magnitude + 0.5);
-			}
+			draw_mod_y = floor(sin(wave_value - index*0.9) * wave_magnitude + 0.5);
 		}
 		
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {
@@ -287,6 +298,8 @@ function jtt_text_fx_equal(a, b) {
 	if (a.effect_m != b.effect_m) return false;
 	if (a.effect_a != b.effect_a) return false;
 	if (a.effect_c != b.effect_c) return false;
+	if (a.float_magnitude != b.float_magnitude) return false;
+	if (a.float_time_max != b.float_time_max) return false;
 	if (a.wave_magnitude != b.wave_magnitude) return false;
 	if (a.wave_time_max != b.wave_time_max) return false;
 	if (a.shake_magnitude != b.shake_magnitude) return false;
