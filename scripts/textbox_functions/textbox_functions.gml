@@ -97,12 +97,13 @@ function JTT_Text() constructor {
 	// movement effects
 	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
 	float_time_max = (has_fx) ? effects.float_time_max : 55;
+	float_increment = (has_fx) ? effects.float_increment : 0.2;
 	float_time = float_time_max;
 	float_value = 0;
 	
 	wave_magnitude = (has_fx) ? effects.wave_magnitude : 2;
-	wave_time_max = (has_fx) ? effects.wave_time_max : 50;
-	wave_offset = (has_fx) ? effects.wave_offset : 0.9;
+	wave_time_max = (has_fx) ? effects.wave_time_max : 85;
+	wave_offset = (has_fx) ? effects.wave_offset : 0.2;
 	wave_time = wave_time_max;
 	wave_value = 0;
 	
@@ -173,8 +174,10 @@ function JTT_Text() constructor {
 			draw_mod_x = 0;
 			while (float_time <= 0) {
 				float_time += float_time_max;
-				float_value += pi/float_magnitude/4; // magic number
-				if (float_value > 2 * pi) float_value -= 2 * pi;
+				
+				// float_magnitude is included here so that larger values, have more increments
+				float_value += float_increment; // magic number
+				
 			}
 			float_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			draw_mod_y = floor(sin(float_value) * float_magnitude + 0.5);
@@ -184,14 +187,19 @@ function JTT_Text() constructor {
 			draw_mod_x = 0;
 			while (wave_time <= 0) {
 				wave_time += wave_time_max;
-				wave_value += pi/wave_magnitude/4; // magic number
-				if (wave_value > 2 * pi) wave_value -= 2 * pi;
+				
+				/* The wave value is how we keep track of the offset between characters. Offset is designed
+				to be the position in the sine function you want the next character to be in terms of pi. 
+				So if your offset is 1, then when a character is at 3pi, the next character will be at 4pi,
+				the next at 5pi, and so on.*/
+				wave_value += wave_offset; 
+				
 			}
 			wave_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			/* Notice the index modifier in the sin function. This ensures that each character using this
-			effect recieves a slightly different position. This is the only real difference between the wave
-			and float effects. */
-			draw_mod_y = floor(sin(wave_value - index * wave_offset) * wave_magnitude + 0.5);
+			effect recieves different position. The -1 ensures the values move through in reverse, which
+			makes the first character look like it's "leading" the wave. */
+			draw_mod_y = floor(sin((index * -1 * wave_offset + wave_value) * pi) * wave_magnitude + 0.5);
 		}
 		
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {
@@ -303,6 +311,7 @@ function jtt_text_fx_equal(a, b) {
 	if (a.float_time_max != b.float_time_max) return false;
 	if (a.wave_magnitude != b.wave_magnitude) return false;
 	if (a.wave_time_max != b.wave_time_max) return false;
+	if (a.wave_offset != b.wave_offset) return false;
 	if (a.shake_magnitude != b.shake_magnitude) return false;
 	if (a.shake_time_max != b.shake_time_max) return false;
 	if (a.pulse_alpha_max != b.pulse_alpha_max) return false;

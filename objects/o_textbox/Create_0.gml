@@ -289,13 +289,13 @@ function command_apply_effects(command_text, _effects) {
 			if (param_i > 0) {
 				// colon found, parse parameters
 				var parameter = "";
-				for (var k = param_i; k <= string_length(command); k++) {
+				for (var k = param_i + 1; k <= string_length(command); k++) {
 					var c = string_char_at(command, k);
 					if (k == string_length(command)) parameter += c;
 					if ((c == ",") || (k == string_length(command))) {
 						/* Parameter complete, note that all effect parameters are numbers,
 						so we convert to number before adding to params list. */
-						ds_list_add(params, string_digits(parameter));
+						ds_list_add(params, real(string_digits(parameter)));
 						parameter = "";
 					} else {
 						parameter += c;
@@ -309,7 +309,17 @@ function command_apply_effects(command_text, _effects) {
 			
 			// movement effects
 			if (command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
-			else if (command == "wave") new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
+			else if (command == "wave") {
+				new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
+				if (params[|0] != undefined) new_effects.wave_magnitude = params[|0];
+				new_effects.wave_magnitude = clamp(new_effects.wave_magnitude, 1, 10000);
+				if (params[|1] != undefined) new_effects.wave_time_max = params[|1];
+				new_effects.wave_time_max = clamp(new_effects.wave_time_max, 1, 10000);
+				if (params[|2] != undefined) {
+					new_effects.wave_offset = params[|2] / 1000;
+				}
+				new_effects.wave_offset = clamp(new_effects.wave_offset, 0, 2);
+			}
 			else if (command == "float") new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
 			else if (command == "shake") {
 				new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
