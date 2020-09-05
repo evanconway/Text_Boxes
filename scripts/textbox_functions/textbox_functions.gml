@@ -1,8 +1,12 @@
-function textbox_delta_time() {
-	var textbox_debugging = true;
-	if (!textbox_debugging) return delta_time;
-	var max_time = 1000000/game_get_speed(gamespeed_fps);
-	return (delta_time > max_time) ? max_time : delta_time;
+function debug_delta_time() {
+	global.DELTA_TIME = delta_time;
+	var debugging = false;
+	if (debugging) {
+		var max_time = 1000000/game_get_speed(gamespeed_fps);
+		if (global.DELTA_TIME > max_time) {
+			global.DELTA_TIME = max_time;
+		}
+	}
 }
 
 enum TB_EFFECT {
@@ -124,7 +128,7 @@ function tb_text(fnt, col, fx) constructor {
 		
 		if (effect == TB_EFFECT.FLOAT) {
 			draw_mod_x = 0;
-			float_time -= textbox_delta_time()/1000;
+			float_time -= global.DELTA_TIME / 1000;
 			if (float_time <= 0) {
 				float_time = float_time_max;
 				float_value += pi/float_magnitude/4; // magic number
@@ -136,7 +140,7 @@ function tb_text(fnt, col, fx) constructor {
 		
 		if (effect == TB_EFFECT.WAVE) {
 			draw_mod_x = 0;
-			wave_time -= textbox_delta_time()/1000;
+			wave_time -= global.DELTA_TIME / 1000;
 			if (wave_time <= 0) {
 				wave_time = wave_time_max;
 				wave_value += pi/wave_magnitude/4; // magic number
@@ -150,7 +154,7 @@ function tb_text(fnt, col, fx) constructor {
 		}
 		
 		if (effect == TB_EFFECT.SHAKE) {
-			shake_time -= textbox_delta_time()/1000;
+			shake_time -= global.DELTA_TIME / 1000;
 			if (shake_time <= 0) {
 				shake_time = shake_time_max;
 				draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);

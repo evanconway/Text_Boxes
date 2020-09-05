@@ -18,10 +18,10 @@ type_on_textset = false;
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
 chirp_id = undefined;
-chirp_gain = 1;
+chirp_gain = 0.5;
 autoupdate = true;
-width = 400;
-height = 700;
+width = 500;
+height = 500;
 alignment_h = fa_center;
 alignment_v = fa_center;
 text_height = 0; // used for bottom and center align
@@ -89,11 +89,8 @@ function set_text(text_string) {
 			
 			// determine line break
 			if (text_list_width(line) + word_width > width) {
-				/* The text will have spaces at the end of lines when alignment_h is center.
-				So to ensure perfect center alignemnt, we remove 1 space (if it exists), from
-				the end of lines before adding them. */
 				var examine = text_list_string(line);
-				if (alignment_h == fa_center) line_remove_last_space(line);
+				line_remove_last_space(line);
 				examine = text_list_string(line);
 				ds_list_add(text, line);
 				text_height += text_list_height(line);
@@ -103,17 +100,8 @@ function set_text(text_string) {
 				word = ds_list_create();
 			} else {
 				line_add_word(line, word);
+				if (space_found) list_add_text(line, " ", font, color, effect, index);
 				struct_list_clear(word);
-				/* Here is where text alignment comes into play. If the text is left aligned, 
-				we add the space to the word, add the word to the line, and start the new word. 
-				But if it's right aligned, we add the word, then the line, and begin the next word
-				with the space starting it. */
-				if ((alignment_h == fa_left) || (alignment_h == fa_center)) {
-					if (space_found) list_add_text(line, " ", font, color, effect, index);
-				}
-				if (alignment_h == fa_right) {
-					if (space_found) list_add_text(word, " ", font, color, effect, index);
-				}
 			}
 			index = end_i + 1;
 		}
@@ -122,6 +110,7 @@ function set_text(text_string) {
 	// add remaining line and word values
 	if (ds_list_size(line) >  0 || ds_list_size(word) > 0) {
 		line_add_word(line, word);
+		line_remove_last_space(line);
 		ds_list_add(text, line);
 		cursor_max += text_list_length(line);
 		text_height += text_list_height(line);
@@ -141,7 +130,6 @@ function set_align_h(new_align_h) {
 		return;
 	}
 	alignment_h = new_align_h;
-	set_text(text_original_string);
 }
 
 /// @desc Set vertical alignment of text.
@@ -154,7 +142,6 @@ function set_align_v(new_align_v) {
 		return;
 	}
 	alignment_v = new_align_v;
-	set_text(text_original_string);
 }
 
 function command_get_effects(command_text, _font, _color, _effect) {
@@ -324,6 +311,7 @@ function text_char_at(ichar) {
 
 /// @desc Determine character typing, and update char structs.
 function update() {
+	debug_delta_time();
 	if (cursor < cursor_max) {
 		if (typing_time <= 0) {
 			typing_time = typing_time_default;
@@ -358,7 +346,7 @@ function update() {
 		
 		/* Note that delta_time is the time in microseconds since the last frame. Our
 		time variables are in milliseconds. */
-		typing_time -= textbox_delta_time()/1000;
+		typing_time -= global.DELTA_TIME / 1000;
 	}
 	
 	for (var i = 0; i < ds_list_size(text); i++) {
