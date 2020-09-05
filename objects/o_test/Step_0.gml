@@ -8,3 +8,39 @@ if (keyboard_check_pressed(vk_f1)) gamespeed -= 30;
 if (keyboard_check_pressed(vk_f2)) gamespeed += 30;
 gamespeed = clamp(gamespeed, 30, 1000);
 game_set_speed(gamespeed, gamespeed_fps);
+
+// text align
+if (keyboard_check_pressed(vk_left)) {
+	if (textbox.alignment_text_h == fa_right) textbox.set_text_align_h(fa_center);
+	else if (textbox.alignment_text_h == fa_center) textbox.set_text_align_h(fa_left);
+}
+if (keyboard_check_pressed(vk_right)) {
+	if (textbox.alignment_text_h == fa_left) textbox.set_text_align_h(fa_center);
+	else if (textbox.alignment_text_h == fa_center) textbox.set_text_align_h(fa_right);
+}
+if (keyboard_check_pressed(vk_up)) {
+	if (textbox.alignment_text_v == fa_bottom) textbox.set_text_align_v(fa_center);
+	else if (textbox.alignment_text_v == fa_center) textbox.set_text_align_v(fa_top);
+}
+if (keyboard_check_pressed(vk_down)) {
+	if (textbox.alignment_text_v == fa_top) textbox.set_text_align_v(fa_center);
+	else if (textbox.alignment_text_v == fa_center) textbox.set_text_align_v(fa_bottom);
+}
+
+// box align
+if (keyboard_check_pressed(ord("D"))) {
+	if (textbox.alignment_box_h == fa_right) textbox.set_box_align_h(fa_center);
+	else if (textbox.alignment_box_h == fa_center) textbox.set_box_align_h(fa_left);
+}
+if (keyboard_check_pressed(ord("A"))) {
+	if (textbox.alignment_box_h == fa_left) textbox.set_box_align_h(fa_center);
+	else if (textbox.alignment_box_h == fa_center) textbox.set_box_align_h(fa_right);
+}
+if (keyboard_check_pressed(ord("S"))) {
+	if (textbox.alignment_box_v == fa_bottom) textbox.set_box_align_v(fa_center);
+	else if (textbox.alignment_box_v == fa_center) textbox.set_box_align_v(fa_top);
+}
+if (keyboard_check_pressed(ord("W"))) {
+	if (textbox.alignment_box_v == fa_top) textbox.set_box_align_v(fa_center);
+	else if (textbox.alignment_box_v == fa_center) textbox.set_box_align_v(fa_bottom);
+}

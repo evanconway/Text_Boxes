@@ -96,7 +96,7 @@ function JTT_Text() constructor {
 	
 	// movement effects
 	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
-	float_time_max = (has_fx) ? effects.float_time_max : 50;
+	float_time_max = (has_fx) ? effects.float_time_max : 55;
 	float_time = float_time_max;
 	float_value = 0;
 	

@@ -11,18 +11,21 @@ typing_time_default = 100;
 typing_time_period = 500;
 typing_time_pause = 300;
 typing_time = typing_time_default;
-type_on_textset = false;
+type_on_textset = true;
 
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
 chirp_id = undefined;
 chirp_gain = 0.5;
 autoupdate = true;
-width = 500;
-height = 500;
-alignment_h = fa_center;
-alignment_v = fa_center;
+width = 680;
+height = 350;
+alignment_text_h = fa_left;
+alignment_text_v = fa_top;
 text_height = 0; // used for bottom and center align
+alignment_box_h = fa_left;
+alignment_box_v = fa_top;
+jtt_debugging = false;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
@@ -111,27 +114,51 @@ function set_text(text_string) {
 }
 
 /// @desc Set horizontal alignment of text.
-function set_align_h(new_align_h) {
-	if (new_align_h == alignment_h) {
+function set_text_align_h(new_align_h) {
+	if (new_align_h == alignment_text_h) {
 		return;
 	}
 	if ((new_align_h != fa_left) && (new_align_h != fa_right) && (new_align_h != fa_center)) {
 		show_error("Invalid alignment value!", true);
 		return;
 	}
-	alignment_h = new_align_h;
+	alignment_text_h = new_align_h;
 }
 
 /// @desc Set vertical alignment of text.
-function set_align_v(new_align_v) {
-	if (new_align_v == alignment_v) {
+function set_text_align_v(new_align_v) {
+	if (new_align_v == alignment_text_v) {
 		return;
 	}
 	if ((new_align_v != fa_top) && (new_align_v != fa_bottom) && (new_align_v != fa_center)) {
 		show_error("Invalid alignment value!", true);
 		return;
 	}
-	alignment_v = new_align_v;
+	alignment_text_v = new_align_v;
+}
+
+/// @desc Set horizontal alignment of box.
+function set_box_align_h(new_align_h) {
+	if (new_align_h == alignment_box_h) {
+		return;
+	}
+	if ((new_align_h != fa_left) && (new_align_h != fa_right) && (new_align_h != fa_center)) {
+		show_error("Invalid alignment value!", true);
+		return;
+	}
+	alignment_box_h = new_align_h;
+}
+
+/// @desc Set vertical alignment of box.
+function set_box_align_v(new_align_v) {
+	if (new_align_v == alignment_box_v) {
+		return;
+	}
+	if ((new_align_v != fa_top) && (new_align_v != fa_bottom) && (new_align_v != fa_center)) {
+		show_error("Invalid alignment value!", true);
+		return;
+	}
+	alignment_box_v = new_align_v;
 }
 
 /// @desc Remove space at end of line, if it exists.

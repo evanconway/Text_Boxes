@@ -1,9 +1,17 @@
 draw_set_valign(fa_top);
 draw_set_halign(fa_left);
 
-draw_set_color(c_gray);
-draw_set_alpha(1);
-draw_rectangle(x, y, x + width, y + height, true);
+if (jtt_debugging) {
+	draw_set_color(c_gray);
+	draw_set_alpha(1);
+	var box_x = x;
+	var box_y = y;
+	if (alignment_box_h == fa_right) box_x -= width;
+	if (alignment_box_h == fa_center) box_x -= floor(width / 2 + 0.5);
+	if (alignment_box_v == fa_bottom) box_y -= height;
+	if (alignment_box_v == fa_center) box_y -= floor(height / 2 + 0.5);
+	draw_rectangle(box_x, box_y, box_x + width, box_y + height, true);
+}
 
 /* To draw the text, we iterate over each row and struct
 in the 2D text list. Each time, we subtract the string
@@ -12,15 +20,24 @@ the length of the struct is larger than _cursor_char, we
 draw the correct portion of the struct, and we are done. */
 var _cursor_char = floor(cursor);
 
-var _x = x;
+// To determine the y position of the text, we first assume text and box are top aligned.
 var _y = y;
-if (alignment_v == fa_bottom) _y = y + height - text_height;
-if (alignment_v == fa_center) _y = y + height / 2 - text_height / 2;
+
+// Now we adjust the starting y position based on box alignment
+if (alignment_box_v == fa_bottom) _y -= height;
+if (alignment_box_v == fa_center) _y -= floor(height / 2 + 0.5);
+// Next adjust starting y position based on text alignment
+
+if (alignment_text_v == fa_bottom) _y = _y + height - text_height;
+if (alignment_text_v == fa_center) _y = _y + floor(height / 2 + 0.5) - floor(text_height / 2 + 0.5);
 
 for (var irow = 0; irow < ds_list_size(text); irow++) {
-	if (alignment_h == fa_left) _x = x;
-	if (alignment_h == fa_right) _x = x + width - text_list_width(text[|irow]);
-	if (alignment_h == fa_center) _x = x + width / 2 - text_list_width(text[|irow]) / 2;
+	// Now we determine x position with same process
+	var _x = x;
+	if (alignment_box_h == fa_right) _x -= width;
+	if (alignment_box_h == fa_center) _x -= floor(width / 2 + 0.5);
+	if (alignment_text_h == fa_right) _x = _x + width - text_list_width(text[|irow]);
+	if (alignment_text_h == fa_center) _x = _x + width / 2 - text_list_width(text[|irow]) / 2;
 	
 	var row_height = 0;
 	// irow is changed when we reach end of typing, so we store value here
