@@ -12,6 +12,7 @@ function textbox_delta_time() {
 }
 
 enum TB_EFFECT_MOVE {
+	OFFSET,
 	WAVE,
 	FLOAT,
 	SHAKE,
@@ -95,6 +96,9 @@ function JTT_Text() constructor {
 	alpha = 1;
 	
 	// movement effects
+	position_offset_x = (has_fx) ? effects.position_offset_x : 2;
+	position_offset_y = (has_fx) ? effects.position_offset_y : 2;
+	
 	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
 	float_time_max = (has_fx) ? effects.float_time_max : 55;
 	float_increment = (has_fx) ? effects.float_increment : 0.2;
@@ -114,12 +118,15 @@ function JTT_Text() constructor {
 	// alpha effects
 	pulse_alpha_max = (has_fx) ? effects.pulse_alpha_max : 1;
 	pulse_alpha_min = (has_fx) ? effects.pulse_alpha_min : 0.4;
-	pulse_increment = (has_fx) ? effects.pulse_increment : 0.05;
 	pulse_time_max = (has_fx) ? effects.pulse_time_max : 80;
+	pulse_increment = (has_fx) ? effects.pulse_increment : 0.05;
 	pulse_time = pulse_time_max;
 	
-	blink_time_max = (has_fx) ? effects.blink_time_max : 400;
-	blink_time = blink_time_max;
+	blink_alpha_on = (has_fx) ? effects.blink_alpha_on : 1;
+	blink_alpha_off = (has_fx) ? effects.blink_alpha_off : 0;
+	blink_time_on = (has_fx) ? effects.blink_time_on : 400;
+	blink_time_off = (has_fx) ? effects.blink_time_off :400;
+	blink_time = blink_time_on;
 	
 	// color effects
 	chromatic_increment = (has_fx) ? effects.chromatic_increment : 10;
@@ -170,14 +177,16 @@ function JTT_Text() constructor {
 			draw_mod_y = 0;
 		}
 		
+		if (effect_m == TB_EFFECT_MOVE.OFFSET) {
+			draw_mod_x = position_offset_x;
+			draw_mod_y = position_offset_y;
+		}
+		
 		if (effect_m == TB_EFFECT_MOVE.FLOAT) {
 			draw_mod_x = 0;
 			while (float_time <= 0) {
 				float_time += float_time_max;
-				
-				// float_magnitude is included here so that larger values, have more increments
 				float_value += float_increment; // magic number
-				
 			}
 			float_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			draw_mod_y = floor(sin(float_value) * float_magnitude + 0.5);
@@ -220,11 +229,11 @@ function JTT_Text() constructor {
 			while (pulse_time <= 0) {
 				pulse_time += pulse_time_max;
 				alpha += pulse_increment;
-				if (alpha > pulse_alpha_max) {
+				if (alpha >= pulse_alpha_max) {
 					alpha = pulse_alpha_max;
 					pulse_increment *= -1;
 				}
-				if (alpha < pulse_alpha_min) {
+				if (alpha <= pulse_alpha_min) {
 					alpha = pulse_alpha_min;
 					pulse_increment *= -1;
 				}
@@ -234,9 +243,11 @@ function JTT_Text() constructor {
 		
 		if (effect_a == TB_EFFECT_ALPHA.BLINK) {
 			while (blink_time <= 0) {
-				blink_time += blink_time_max;
-				if (alpha == 1) alpha = 0;
-				else alpha = 1;
+				if (alpha == blink_alpha_on) blink_time += blink_time_off;
+				if (alpha == blink_alpha_off) blink_time += blink_time_on;
+				
+				if (alpha == blink_alpha_on) alpha = blink_alpha_off;
+				else alpha = blink_alpha_on;
 			}
 			blink_time -= global.TEXTBOX_DELTA_TIME / 1000;
 		}
@@ -307,8 +318,11 @@ function jtt_text_fx_equal(a, b) {
 	if (a.effect_m != b.effect_m) return false;
 	if (a.effect_a != b.effect_a) return false;
 	if (a.effect_c != b.effect_c) return false;
+	if (a.position_offset_x != b.position_offset_x) return false;
+	if (a.position_offset_y != b.position_offset_y) return false;
 	if (a.float_magnitude != b.float_magnitude) return false;
 	if (a.float_time_max != b.float_time_max) return false;
+	if (a.float_increment != b.float_increment) return false;
 	if (a.wave_magnitude != b.wave_magnitude) return false;
 	if (a.wave_time_max != b.wave_time_max) return false;
 	if (a.wave_offset != b.wave_offset) return false;
@@ -318,7 +332,10 @@ function jtt_text_fx_equal(a, b) {
 	if (a.pulse_alpha_min != b.pulse_alpha_min ) return false;
 	if (a.pulse_increment != b.pulse_increment) return false;
 	if (a.pulse_time_max != b.pulse_time_max) return false;
-	if (a.blink_time_max != b.blink_time_max) return false;
+	if (a.blink_alpha_on != b.blink_alpha_on) return false;
+	if (a.blink_alpha_off != b.blink_alpha_off) return false;
+	if (a.blink_time_on != b.blink_time_on) return false;
+	if (a.blink_time_off != b.blink_time_off) return false;
 	if (a.chromatic_increment != b.chromatic_increment) return false;
 	if (a.chromatic_time_max != b.chromatic_time_max) return false;
 	if (a.chromatic_max != b.chromatic_max) return false;
