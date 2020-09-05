@@ -31,7 +31,7 @@ function set_text(text_string) {
 	text_height = 0;
 	var effects = new JTT_Text("", effects_default); // effects copied from default
 	for (var i = 0; i < ds_list_size(text); i++) {
-		struct_list_destroy(text[|i]);
+		ds_list_destroy(text[|i]);
 	}
 	ds_list_clear(text);
 	var line = ds_list_create();
@@ -81,7 +81,7 @@ function set_text(text_string) {
 			
 			// determine line break
 			if (text_list_width(line) + word_width > width) {
-				line_remove_last_space(line);
+				line_remove_last_space(line); // so lines neither start nor end with spaces, makes align easy
 				ds_list_add(text, line);
 				text_height += text_list_height(line);
 				cursor_max += text_list_length(line);
@@ -91,7 +91,7 @@ function set_text(text_string) {
 			} else {
 				line_add_word(line, word);
 				if (space_found) list_add_text(line, " ", effects, index);
-				struct_list_clear(word);
+				ds_list_clear(word);
 			}
 			index = end_i + 1;
 		}
@@ -106,7 +106,7 @@ function set_text(text_string) {
 		text_height += text_list_height(line);
 	}
 	if (type_on_textset) cursor = cursor_max;
-	struct_list_destroy(word);
+	ds_list_destroy(word);
 	return text;
 }
 
@@ -164,20 +164,6 @@ function line_add_word(line, word) {
 			ds_list_add(line, word[|i]);
 		}
 	}
-}
-
-function struct_list_destroy(list) {
-	for (var i = 0; i < ds_list_size(list); i++) {
-		delete list[|i];
-	}
-	ds_list_destroy(list);
-}
-
-function struct_list_clear(list) {
-	for (var i = 0; i < ds_list_size(list); i++) {
-		delete list[|i];
-	}
-	ds_list_clear(list);
 }
 
 /// @desc Add text to existing structs if effects are the same, otherwise creates new ones.
