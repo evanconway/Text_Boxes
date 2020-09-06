@@ -17,55 +17,75 @@ if (global.JTT_DEBUGGING) {
 	draw_rectangle(box_x, box_y, box_x + textbox_width, box_y + textbox_height, true);
 }
 
-/* To draw the text, we iterate over each row and struct
-in the 2D text list. Each time, we subtract the string
-length of the struct at irow/ichar from _cursor_char. once
-the length of the struct is larger than _cursor_char, we
-draw the correct portion of the struct, and we are done. */
-var _cursor_char = floor(cursor);
+/* To determine the y position of the text, we first find
+the top and bottom of the box. */
+var box_top = y;
+if (alignment_box_v == fa_bottom) box_top -= textbox_height;
+if (alignment_box_v == fa_center) box_top -= floor(textbox_height / 2 + 0.5);
+var box_bottom = box_top + textbox_height;
 
-// To determine the y position of the text, we first assume text and box are top aligned.
-var _y = y;
+/* Now we find the starting y position of the text, we start 
+by assuming we are scrolling the text, so the text will start at
+the bottom. */
+var _y = floor(box_bottom + scroll_modifier + 0.5);
 
-// Now we adjust the starting y position based on box alignment
-if (alignment_box_v == fa_bottom) _y -= textbox_height;
-if (alignment_box_v == fa_center) _y -= floor(textbox_height / 2 + 0.5);
-// Next adjust starting y position based on text alignment
+// Assign different values based on alignment if page displayed. 
+if (reading_mode == 0) {
+	if (alignment_text_v == fa_top) _y = box_top;
+	if (alignment_text_v == fa_bottom) _y = box_bottom - text_height;
+	if (alignment_text_v == fa_center) _y = box_top + floor(textbox_height / 2 + 0.5) - floor(text_height / 2 + 0.5);
+}
 
-if (alignment_text_v == fa_bottom) _y = _y + textbox_height - text_height;
-if (alignment_text_v == fa_center) _y = _y + floor(textbox_height / 2 + 0.5) - floor(text_height / 2 + 0.5);
-
-for (var irow = row_i_start; irow <= row_i_end; irow++) {
-	// Now we determine x position with same process
-	var _x = x;
-	if (alignment_box_h == fa_right) _x -= textbox_width;
-	if (alignment_box_h == fa_center) _x -= floor(textbox_width / 2 + 0.5);
-	if (alignment_text_h == fa_right) _x = _x + textbox_width - text_list_width(text[|irow]);
-	if (alignment_text_h == fa_center) _x = _x + textbox_width / 2 - text_list_width(text[|irow]) / 2;
+for (var irow = row_i_start; irow <= cursor_row; irow++) {
+	var row_height = text_list_height(text[|irow]);
 	
-	var row_height = 0;
-	// irow is changed when we reach end of typing, so we store value here
-	var row_size = ds_list_size(text[|irow]);
-	for (var istruct = 0; istruct < row_size; istruct++) {
-		var text_struct = text[|irow][|istruct];
-		draw_set_font(text_struct.font);
-		draw_set_color(text_struct.draw_color);
-		draw_set_alpha(text_struct.alpha);
-		var draw_x = _x + text_struct.draw_mod_x;
-		var draw_y = _y + text_struct.draw_mod_y;
-		if (text_struct.get_height() > row_height) row_height = text_struct.get_height();
+	// we only draw the row if it is within the bounds of the box
+	if ((_y >= box_top) && ((_y + row_height) <= box_bottom)) {
+	
+		// Now we determine x position with same process
+		var _x = x;
+		if (alignment_box_h == fa_right) _x -= textbox_width;
+		if (alignment_box_h == fa_center) _x -= floor(textbox_width / 2 + 0.5);
+		if (alignment_text_h == fa_right) _x = _x + textbox_width - text_list_width(text[|irow]);
+		if (alignment_text_h == fa_center) _x = _x + textbox_width / 2 - text_list_width(text[|irow]) / 2;
+	
+		// irow is changed when we reach end of typing, so we store value here
+		var row_size = ds_list_size(text[|irow]);
 		
-		if (string_length(text_struct.text) < _cursor_char) {
-			_cursor_char -= string_length(text_struct.text);
-			draw_text(draw_x, draw_y, text_struct.text);
-		} else {
-			// if we reach this block, we have reached the end of typing
-			istruct = ds_list_size(text[|irow]);
-			irow = ds_list_size(text);
-			var _text = string_copy(text_struct.text, 1, _cursor_char);
-			draw_text(draw_x, draw_y, _text);
+		var _cursor_char = floor(cursor);
+		
+		// Draw each struct in the row. 
+		for (var istruct = 0; istruct < row_size; istruct++) {
+			var text_struct = text[|irow][|istruct];
+			draw_set_font(text_struct.font);
+			draw_set_color(text_struct.draw_color);
+			draw_set_alpha(text_struct.alpha);
+			var draw_x = _x + text_struct.draw_mod_x;
+			var draw_y = _y + text_struct.draw_mod_y;
+			
+			// if we are not on the cursor row, we can just draw the text
+			if (irow < cursor_row) {
+				draw_text(draw_x, draw_y, text_struct.text);
+			} else {
+				
+				/* But if we are, we must check to see if the text goes beyond
+				the cursor. In which case we'll only draw a portion of the string.*/
+				var str_length = string_length(text_struct.text)
+				
+				// we subtract the length of each struct from _cursor char
+				if (str_length < _cursor_char) {
+					_cursor_char -= str_length;
+					draw_text(draw_x, draw_y, text_struct.text);
+				} else {
+					/* Once cursor char is smaller than the struct, we draw that 
+					portion of the struct. This is the end of drawing. */ 
+					istruct = row_size;
+					var _text = string_copy(text_struct.text, 1, _cursor_char);
+					draw_text(draw_x, draw_y, _text);
+				}
+			}
+			_x += text_struct.get_width();
 		}
-		_x += text_struct.get_width();
 	}
 	_y += row_height;
 }

@@ -9,7 +9,6 @@ typing_time_default = 100;
 typing_time_period = 500;
 typing_time_pause = 300;
 typing_time = 0;
-type_on_textset = false;
 
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
@@ -25,8 +24,10 @@ alignment_box_h = fa_center;
 alignment_box_v = fa_center;
 
 reading_mode = 0; // 0 for pages, 1 for scrolling
+scroll_modifier = 0;
+scroll_increment = 0.3;
 cursor = 0;
-cursor_max = 0; // num of chars in page, set by next_page
+cursor_row = 0;
 
 /* Both of these indicies are inclusive, they are the rows to
 be displayed. They being undefined, and are set by calling
@@ -108,8 +109,6 @@ function set_text(text_string) {
 		line_add_word(line, word);
 		line_remove_last_space(line);
 		ds_list_add(text, line);
-		cursor_max += text_list_length(line);
-		text_height += text_list_height(line);
 	}
 	ds_list_destroy(word);
 	return text;
@@ -417,18 +416,13 @@ function command_apply_effects(command_text, _effects) {
 	return new_effects;
 }
 
-/// @desc Return the character at the given character index.
-function text_char_at(ichar) {
-	if (row_i_start < 0) {
-		return undefined;
-	}
+/// @desc Return the character in the text list at the given character index.
+function text_list_char_at(list, ichar) {
 	ichar = floor(ichar);
-	for (var irow = row_i_start; irow < ds_list_size(text); irow++) {
-		for (var i = 0; i < ds_list_size(text[|irow]); i++) {
-			var struct_text = text[|irow][|i].text;
-			if (ichar > string_length(struct_text)) ichar -= string_length(struct_text);
-			else return string_char_at(struct_text, ichar);	
-		}
+	for (var i = 0; i < ds_list_size(list); i++) {
+		var struct_text = list[|i].text;
+		if (ichar > string_length(struct_text)) ichar -= string_length(struct_text);
+		else return string_char_at(struct_text, ichar);	
 	}
 	return undefined;
 }
@@ -436,8 +430,8 @@ function text_char_at(ichar) {
 /// @desc Set new display values to begin displaying text
 function jtt_next_page() {
 	typing_time = 0;
-	cursor_max = 0;
 	text_height = 0;
+	scroll_modifier = 0;
 	if (reading_mode == 0) { // pages
 		/* Find start and end indicies of rows that fit in
 		the text box height. */
@@ -460,7 +454,6 @@ function jtt_next_page() {
 		not fit within the height. */
 		var page_height = text_list_height(text[|row_i_start]);
 		text_height = page_height;
-		cursor_max += text_list_length(text[|row_i_start]);
 		
 		// Iterate over rows, increase row_i_end if they fit.
 		row_i_end = row_i_start;
@@ -469,7 +462,6 @@ function jtt_next_page() {
 			var next_height = text_list_height(text[|(row_i_end + 1)]);
 			if ((page_height + next_height) < textbox_height) {
 				row_i_end += 1;
-				cursor_max += text_list_length(text[|row_i_end]);
 				page_height += next_height;
 				text_height += next_height;
 			} else {
@@ -480,19 +472,34 @@ function jtt_next_page() {
 		row_i_start = 0;
 		row_i_end = ds_list_size(text) - 1;
 	}
-	cursor = (type_on_textset) ? cursor_max : 0;
+	
+	// set cursor
+	cursor = 0
+	cursor_row = row_i_start;
 }
 
 /// @desc Return true if typing complete.
 function jtt_get_typing_finished() {
-	return cursor >= cursor_max;
+	if (cursor_row < row_i_end) return false;
+	// if we make it here, we can assume cursor row is at final row
+	if (cursor < text_list_length(text[|cursor_row])) return false;
+	return true;
+}
+
+/// @desc Set typing cursor values to finished.
+function jtt_set_typing_finished() {
+	if (text_original_string != undefined) {
+		cursor_row = row_i_end;
+		cursor = text_list_length(text[|cursor_row]);
+	}
 }
 
 /// @desc Determine character typing, and update char structs.
 function update() {
 	textbox_delta_time();
+	
+	// typing effect
 	if ((row_i_start != undefined) && !jtt_get_typing_finished()) {
-		
 		// run update logic until caught up
 		while (typing_time <= 0) {
 			typing_time += typing_time_default;
@@ -508,14 +515,33 @@ function update() {
 				audio_sound_gain(chirp_id, chirp_gain * chirp_gain_default, 0);
 			}
 
-			/* increase character cursor. We move the cursor "typing_increment" 
-			number of times. But we stop if we encounter punctiation. */
+			/* This loop increases the cursor by typing increment, but stops if it
+			encounters punctuation. It also ensures the cursor wraps when reaching
+			the end of the row. */
+			var row_length = text_list_length(text[|cursor_row]);
 			var _typing_increment = typing_increment;
 			while (_typing_increment > 0) {
-				if (_typing_increment >= 1) cursor++;
+				
+				// increase the value of the cursor
+				if (_typing_increment >= 1) cursor += 1;
 				else cursor += _typing_increment;
 				_typing_increment -= 1;
-				var char_at_cursor = text_char_at(cursor);
+				
+				/* Here we calculate cursor wrap. Since our code floors the cursor when
+				checking positions, the cursor will not wrap until it is a full integer
+				beyond the length of the row. */
+				if (cursor >= (row_length + 1)) {
+					// We only change the cursor if we're not on the last row
+					if (cursor_row < row_i_end) {
+						cursor = 1;
+						cursor_row += 1;
+						row_length = text_list_length(text[|cursor_row]);
+					} else {
+						cursor = row_length;
+					}
+				}
+				
+				var char_at_cursor = text_list_char_at(text[|cursor_row], cursor);
 				if (char_at_cursor == ".") {
 					_typing_increment = 0;
 					typing_time += typing_time_period;
@@ -532,6 +558,12 @@ function update() {
 		typing_time -= global.TEXTBOX_DELTA_TIME / 1000;
 	}
 	
+	// scrolling effect
+	if ((row_i_start != undefined) && (reading_mode == 1)) {
+		scroll_modifier -= scroll_increment;
+	}
+	
+	// update text structs
 	for (var i = 0; i < ds_list_size(text); i++) {
 		for (var k = 0; k < ds_list_size(text[|i]); k++) {
 			text[|i][|k].update();
