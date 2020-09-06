@@ -29,6 +29,11 @@ scroll_increment = 0.3;
 cursor = 0;
 cursor_row = 0;
 
+/* This value is the point from the edge of the text box at which scrolling
+text will begin to fade out. The alpha value of a row of text is set to its
+distance from the edge divided by this value. */ 
+scroll_fade_bound = 10;
+
 /* Both of these indicies are inclusive, they are the rows to
 be displayed. They being undefined, and are set by calling
 jtt_next_page. */

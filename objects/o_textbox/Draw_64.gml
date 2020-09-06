@@ -63,6 +63,21 @@ for (var irow = row_i_start; irow <= cursor_row; irow++) {
 			var draw_x = _x + text_struct.draw_mod_x;
 			var draw_y = _y + text_struct.draw_mod_y;
 			
+			/* Here we determine the alpha of a line of text when scrolling. If the text is
+			beyond the bounding value, the alpha modifier is 1. If not, it is the percentage 
+			distance between the edge and the boudning value. Note that the bottom row takes
+			precedent over the top. */
+			var alpha_scroll_mod = 1;
+			if ((reading_mode == 1) && (scroll_fade_bound > 0)) {
+				if (_y < (box_top + scroll_fade_bound)) {
+					alpha_scroll_mod = (_y - box_top) / scroll_fade_bound;
+				}
+				if ((_y + row_height) > (box_bottom - scroll_fade_bound)) {
+					alpha_scroll_mod = (box_bottom - (_y + row_height)) / scroll_fade_bound;
+				}
+			}
+			draw_set_alpha(text_struct.alpha * alpha_scroll_mod);
+			
 			// if we are not on the cursor row, we can just draw the text
 			if (irow < cursor_row) {
 				draw_text(draw_x, draw_y, text_struct.text);

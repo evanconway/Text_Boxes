@@ -16,7 +16,7 @@ delta_vals = array_create(100, def_val);
 delta_index = 0;
 
 continue_text = instance_create_depth(box_x, (box_y + textbox.textbox_height), 0, o_textbox);
-continue_text.set_text("<white pulse>Continue...");
+continue_text.set_text("<white pulse float:1>Continue...");
 continue_text.jtt_next_page();
 continue_text.jtt_set_typing_finished();
 continue_text.alignment_box_h = fa_center;
