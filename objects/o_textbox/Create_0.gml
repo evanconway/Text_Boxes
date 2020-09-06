@@ -1,7 +1,5 @@
 text = ds_list_create(); // ds_list of text structs
 text_original_string = undefined; // keep original string of set text
-cursor = 0;
-cursor_max = 0; // num of chars in text, set by set_text
 effects_default = new JTT_Text(); // effect data is stored in an unused text struct
 
 /* Typing time is the time, in milliseconds, between each "type". Note that
@@ -10,27 +8,35 @@ game will "type" once each frame. */
 typing_time_default = 100;
 typing_time_period = 500;
 typing_time_pause = 300;
-typing_time = typing_time_default;
-type_on_textset = true;
+typing_time = 0;
+type_on_textset = false;
 
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
 chirp_id = undefined;
 chirp_gain = 0.5;
 autoupdate = true;
-width = 680;
-height = 350;
+textbox_width = 300;
+textbox_height = 100;
 alignment_text_h = fa_left;
 alignment_text_v = fa_top;
-text_height = 0; // used for bottom and center align
-alignment_box_h = fa_left;
-alignment_box_v = fa_top;
+text_height = 0; // used for bottom and center align, calculated in next_page
+alignment_box_h = fa_center;
+alignment_box_v = fa_center;
+
+reading_mode = 0; // 0 for pages, 1 for scrolling
+cursor = 0;
+cursor_max = 0; // num of chars in page, set by next_page
+
+/* Both of these indicies are inclusive, they are the rows to
+be displayed. They being undefined, and are set by calling
+jtt_next_page. */
+row_i_start = undefined;
+row_i_end = undefined;
 
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
 	text_original_string = text_string;
-	cursor_max = 0;
-	text_height = 0;
 	var effects = new JTT_Text("", effects_default); // effects copied from default
 	for (var i = 0; i < ds_list_size(text); i++) {
 		ds_list_destroy(text[|i]);
@@ -78,21 +84,19 @@ function set_text(text_string) {
 			var text_toadd_length = (space_found) ? end_i - index : end_i - index + 1;
 			var text_toadd = string_copy(text_string, index, text_toadd_length);
 			
-			list_add_text(word, text_toadd, effects, index);
+			text_list_add(word, text_toadd, effects, index);
 			var word_width = text_list_width(word); // note that space is added after
 			
 			// determine line break
-			if (text_list_width(line) + word_width > width) {
+			if (text_list_width(line) + word_width > textbox_width) {
 				line_remove_last_space(line); // so lines neither start nor end with spaces, makes align easy
 				ds_list_add(text, line);
-				text_height += text_list_height(line);
-				cursor_max += text_list_length(line);
 				line = word;
-				if (space_found) list_add_text(line, " ", effects, index);
+				if (space_found) text_list_add(line, " ", effects, index);
 				word = ds_list_create();
 			} else {
 				line_add_word(line, word);
-				if (space_found) list_add_text(line, " ", effects, index);
+				if (space_found) text_list_add(line, " ", effects, index);
 				ds_list_clear(word);
 			}
 			index = end_i + 1;
@@ -107,7 +111,6 @@ function set_text(text_string) {
 		cursor_max += text_list_length(line);
 		text_height += text_list_height(line);
 	}
-	if (type_on_textset) cursor = cursor_max;
 	ds_list_destroy(word);
 	return text;
 }
@@ -193,7 +196,7 @@ function line_add_word(line, word) {
 }
 
 /// @desc Add text to existing structs if effects are the same, otherwise creates new ones.
-function list_add_text(list, text, effects, index) {
+function text_list_add(list, text, effects, index) {
 	if (text == "") return;
 	if (jtt_text_req_ind_struct(effects)) {
 		for (var i = 1; i <= string_length(text); i++) {
@@ -416,8 +419,11 @@ function command_apply_effects(command_text, _effects) {
 
 /// @desc Return the character at the given character index.
 function text_char_at(ichar) {
+	if (row_i_start < 0) {
+		return undefined;
+	}
 	ichar = floor(ichar);
-	for (var irow = 0; irow < ds_list_size(text); irow++) {
+	for (var irow = row_i_start; irow < ds_list_size(text); irow++) {
 		for (var i = 0; i < ds_list_size(text[|irow]); i++) {
 			var struct_text = text[|irow][|i].text;
 			if (ichar > string_length(struct_text)) ichar -= string_length(struct_text);
@@ -427,10 +433,65 @@ function text_char_at(ichar) {
 	return undefined;
 }
 
+/// @desc Set new display values to begin displaying text
+function jtt_next_page() {
+	typing_time = 0;
+	cursor_max = 0;
+	text_height = 0;
+	if (reading_mode == 0) { // pages
+		/* Find start and end indicies of rows that fit in
+		the text box height. */
+		
+		/* Set start the beginning if undefined, to 
+		the next row, or the beginning if row_i_end 
+		was already at the end of text. */
+		if (row_i_start == undefined) {
+			row_i_start = 0;
+			row_i_end = 0;
+		} else {
+			row_i_start = row_i_end + 1;
+		}
+		if (row_i_start >= ds_list_size(text)) {
+			row_i_start = 0;			
+		}
+		
+		/* Set the variables for the first line. The textbox will
+		always display a minimum of one line, even if it does
+		not fit within the height. */
+		var page_height = text_list_height(text[|row_i_start]);
+		text_height = page_height;
+		cursor_max += text_list_length(text[|row_i_start]);
+		
+		// Iterate over rows, increase row_i_end if they fit.
+		row_i_end = row_i_start;
+		var checking = true;
+		while (checking && (row_i_end < (ds_list_size(text) - 1))) {
+			var next_height = text_list_height(text[|(row_i_end + 1)]);
+			if ((page_height + next_height) < textbox_height) {
+				row_i_end += 1;
+				cursor_max += text_list_length(text[|row_i_end]);
+				page_height += next_height;
+				text_height += next_height;
+			} else {
+				checking = false;
+			}
+		}
+	} else if (reading_mode == 1) { // scrolling
+		row_i_start = 0;
+		row_i_end = ds_list_size(text) - 1;
+	}
+	cursor = (type_on_textset) ? cursor_max : 0;
+}
+
+/// @desc Return true if typing complete.
+function jtt_get_typing_finished() {
+	return cursor >= cursor_max;
+}
+
 /// @desc Determine character typing, and update char structs.
 function update() {
 	textbox_delta_time();
-	if (cursor < cursor_max) {
+	if ((row_i_start != undefined) && !jtt_get_typing_finished()) {
 		
 		// run update logic until caught up
 		while (typing_time <= 0) {
@@ -446,10 +507,9 @@ function update() {
 				var chirp_gain_default = audio_sound_get_gain(chirp);
 				audio_sound_gain(chirp_id, chirp_gain * chirp_gain_default, 0);
 			}
-			
-			/* increase character cursor. We iterate over the new
-			"typing_increment" number of times. But we stop if we
-			encounter punctiation. */
+
+			/* increase character cursor. We move the cursor "typing_increment" 
+			number of times. But we stop if we encounter punctiation. */
 			var _typing_increment = typing_increment;
 			while (_typing_increment > 0) {
 				if (_typing_increment >= 1) cursor++;

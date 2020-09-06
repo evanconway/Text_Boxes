@@ -27,6 +27,8 @@ draw_text(10, 30, "FPS_REAL: " + string(fps_real));
 draw_text(10, 50, "DELTA_AVG: " + string(delta_avg));
 draw_text(10, 70, "DELTA_DIFF: " + string(delta_diff));
 
+/*
 draw_set_color(c_fuchsia);
 var radius = 4;
 draw_circle(box_x, box_y, radius, false);
+*/
