@@ -50,3 +50,21 @@ function jtt_create_box_typing_gui(_x, _y, width, height) {
 	result.is_gui = true;
 	return result;
 }
+
+/// @func jtt_create_box_scrolling(x, y, width, height, *text)
+function jtt_create_box_scrolling(_x, _y, width, height) {
+	var result = jtt_create_box(_x, _y, width, height);
+	result.textbox_display_mode = 1;
+	if ((argument_count > 4) && (argument[4] != undefined)) {
+		result.set_text(argument[4]);
+	}
+	return result;
+}
+
+/// @func jtt_create_box_scrolling_gui(x, y, width, height, *text)
+function jtt_create_box_scrolling_gui(_x, _y, width, height) {
+	var text = (argument_count > 4) ? argument[4] : undefined;
+	var result = jtt_create_box_scrolling(_x, _y, width, height, text);
+	result.is_gui = true;
+	return result;
+}
