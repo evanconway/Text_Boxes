@@ -8,7 +8,7 @@ camera_set_view_pos(view_camera[0], 0, 0);
 var gui_w_c = floor(display_get_gui_width() / 2 + 0.5);
 var gui_h_c = floor(display_get_gui_height() / 2 + 0.5);
 
-text = jtt_create_box_scrolling_gui(gui_w_c, gui_h_c, 400, 300);
+text = jtt_create_box_typing_gui(gui_w_c, gui_h_c, 400, 300);
 text.set_alignments(fa_center, fa_center, fa_center, fa_center);
 text.scroll_increment = 0.7;
 text.scroll_fade_bound = 0;
@@ -17,4 +17,4 @@ text.scroll_fade_bound = 0;
 //text.effects_default.shake_magnitude = 0;
 //text.effects_default.shake_time_max = 400;
 
-greeting = "<wave chromatic>It's not like it's a problem though. I can turn it off.";
+greeting = "I just need to fill this thing up with text so I can see if my linebreak code is still working properly.";

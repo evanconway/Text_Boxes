@@ -51,6 +51,7 @@ row_i_end = undefined;
 /* If the textbox width and height are not defined, then the text generated
 will not line wrap, and width/height will be set to the width/height of the
 new text. */
+/// @func set_text(string)
 function set_text(text_string) {
 	text_original_string = text_string;
 	text_height = 0; // scrolling requires text_height of entire list
@@ -138,10 +139,18 @@ function set_text(text_string) {
 			text_list_add(word, text_toadd, effects, index);
 			
 			// determine line break
-			if (space_found) {
-				var linebreak = text_add_linebreak(word, line, effects, index);
-				word = linebreak.nw;
-				line = linebreak.nl;
+			var word_width = text_list_width(word); // note that space is added after
+			if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+				line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
+				ds_list_add(text, line);
+				text_height += text_list_height(line); // scrolling requies whole text height
+				line = word;
+				text_list_add(line, " ", effects, index);
+				word = ds_list_create();
+			} else {
+				line_add_word(line, word);
+				text_list_add(line, " ", effects, index);
+				ds_list_clear(word);
 			}
 		}
 		index = end_i + 1;
@@ -184,6 +193,7 @@ function text_add_linebreak(word, line, effects, index) {
 }
 
 /// @desc Set horizontal alignment of text.
+/// @func set_text_align_h(new_align_h)
 function set_text_align_h(new_align_h) {
 	if (new_align_h == alignment_text_h) {
 		return;
@@ -196,6 +206,7 @@ function set_text_align_h(new_align_h) {
 }
 
 /// @desc Set vertical alignment of text.
+/// @func set_text_align_v(new_align_v)
 function set_text_align_v(new_align_v) {
 	if (new_align_v == alignment_text_v) {
 		return;
@@ -208,6 +219,7 @@ function set_text_align_v(new_align_v) {
 }
 
 /// @desc Set horizontal alignment of box.
+/// @func set_box_align_h(new_align_h)
 function set_box_align_h(new_align_h) {
 	if (new_align_h == alignment_box_h) {
 		return;
@@ -220,6 +232,7 @@ function set_box_align_h(new_align_h) {
 }
 
 /// @desc Set vertical alignment of box.
+/// @func set_box_align_v(new_align_v)
 function set_box_align_v(new_align_v) {
 	if (new_align_v == alignment_box_v) {
 		return;
@@ -463,6 +476,7 @@ function command_apply_effects(command_text, _effects) {
 
 /// @desc Set new display values to next displayable chunk of text.
 // Note that for scrolling, the entire text is always displayable.
+/// @func next_page()
 function next_page() {
 	if (ds_list_size(text) <= 0) {
 		show_error("Cannot go to next page, text not set!", true);
@@ -526,6 +540,7 @@ function next_page() {
 }
 
 /// @desc Return true if typing complete.
+/// @func get_typing_finished()
 function get_typing_finished() {
 	if (cursor_row < row_i_end) return false;
 	
@@ -539,6 +554,7 @@ function get_typing_finished() {
 }
 
 /// @desc Set typing cursor values to finished.
+/// @func set_typing_finished()
 function set_typing_finished() {
 	if (ds_list_size(text) <= 0) {
 		show_error("Cannot set typing finished, text not set!", true);
@@ -549,6 +565,7 @@ function set_typing_finished() {
 }
 
 /// @desc Set typing cursor values to start of displayable chunk
+/// @func set_typing_start()
 function set_typing_start() {
 	if (row_i_start == undefined) {
 		show_error("Cannot set typing start, next_page() not called!", true);
