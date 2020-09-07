@@ -16,6 +16,6 @@ text.scroll_increment = 0.7;
 //text.effects_default.shake_magnitude = 0;
 //text.effects_default.shake_time_max = 400;
 
-greeting = "I just need to fill this thing up with text so I can see if my linebreak code is still working properly. And also to see if the new \"advance\" function works correctly. This should be more than enough text to fill out multiple pages.";
+greeting = "I just <red>ne<>ed to fill this thing up with text so I can see if my linebreak code is still working properly. And also to see if the new \"advance\" function works correctly. This should be more than enough text to fill out multiple pages.";
 
 text.set_text(greeting);

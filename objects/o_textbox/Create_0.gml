@@ -154,11 +154,11 @@ function set_text(text_string) {
 				ds_list_add(text, line);
 				text_height += text_list_height(line); // scrolling requies whole text height
 				line = word;
-				text_list_add(line, " ", effects, index);
+				if (space_found) text_list_add(line, " ", effects, index);
 				word = ds_list_create();
 			} else {
 				line_add_word(line, word);
-				text_list_add(line, " ", effects, index);
+				if (space_found) text_list_add(line, " ", effects, index);
 				ds_list_clear(word);
 			}
 		}
@@ -180,7 +180,6 @@ function set_text(text_string) {
 		textbox_width = text_list_width(text[|0]);
 		textbox_height = text_list_height(text[|0]);
 	}
-	//next_page(); // this sets the cursor and row_i values to display the text
 }
 
 /// @desc Set horizontal alignment of text.
@@ -557,6 +556,12 @@ function advance() {
 			}
 		}	
 	}
+}
+
+/// @desc Return true if the whole text fits in the box.
+/// @func get_fits_onepage()
+function get_fits_onepage() {
+	return (text_height <= textbox_height);
 }
 
 /// @desc Return true if typing complete.
