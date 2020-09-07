@@ -29,17 +29,26 @@ alignment_box_h = fa_left;
 alignment_box_v = fa_top;
 
 textbox_display_mode = 0; // 0 for typing, 1 for scrolling
+
 scroll_modifier = 0;
 scroll_increment = 0.3;
-cursor = 0;
-cursor_row = 0;
-
-is_gui = false; // determines if drawing occures in world or gui
 
 /* This value is the point from the edge of the text box at which scrolling
 text will begin to fade out. The alpha value of a row of text is set to its
 distance from the edge divided by this value. */ 
 scroll_fade_bound = 10;
+
+/* scroll_end is the distance the bottom of the final line must be from
+the top of the textbox before it stops scrolling. A value of 0 means the
+text will be completely off the textbox before it stops. A value of the
+height of the textbox means it will stop once the last line is completely
+visible. */
+scroll_end = 200; 
+
+cursor = 0;
+cursor_row = 0;
+
+is_gui = false; // determines if drawing occures in world or gui
 
 /* Both of these indicies are inclusive, they are the rows to
 be displayed. They begin undefined, and are set by calling
@@ -171,7 +180,7 @@ function set_text(text_string) {
 		textbox_width = text_list_width(text[|0]);
 		textbox_height = text_list_height(text[|0]);
 	}
-	next_page(); // this sets the cursor and row_i values to display the text
+	//next_page(); // this sets the cursor and row_i values to display the text
 }
 
 /// @desc Set horizontal alignment of text.
@@ -521,6 +530,35 @@ function next_page() {
 	}
 }
 
+/// @desc Set textbox to next logical state
+/// @func advance()
+function advance() {
+	/* For the two display modes, typing and scrolling, there are basically 3
+	states: text set but typing/scrolling not started, typing/scrolling started
+	but not finished, and typing/scrolling finished. This detects which state
+	the box is in, and sets it to the next one. */
+	
+	/* next_page() sets up the starting values if the text been set but not begun.
+	It works for both display modes. */
+	if (row_i_start == undefined) {
+		next_page();
+	} else {
+		if (textbox_display_mode == 0) {
+			if (get_typing_finished()) {
+				next_page();
+			} else {
+				set_typing_finished();
+			}
+		} else {
+			if (get_scrolling_finished()) {
+				next_page();
+			} else {
+				set_scrolling_finished();
+			}
+		}	
+	}
+}
+
 /// @desc Return true if typing complete.
 /// @func get_typing_finished()
 function get_typing_finished() {
@@ -555,6 +593,25 @@ function set_typing_start() {
 		cursor = 0
 		cursor_row = row_i_start;
 	}
+}
+
+/// @desc Return true if text at end scrolling position
+/// @func get_scrolling_finished()
+function get_scrolling_finished() {
+	var end_modifier = (text_height + textbox_height - scroll_end) * -1;
+	return scroll_modifier <= end_modifier;
+}
+
+/// @desc Set scroll_modifier to end scrolling position
+/// @func set_scrolling_finished()
+function set_scrolling_finished() {
+	scroll_modifier = (text_height + textbox_height - scroll_end) * -1;
+}
+
+/// @desc Set scroll_modifier back to start position
+/// @func set_scrolling_start
+function set_scrolling_start() {
+	scroll_modifier = 0;
 }
 
 /// @desc Determine character typing, and update char structs.
@@ -635,6 +692,10 @@ function update() {
 	// scrolling effect
 	if ((row_i_start != undefined) && (textbox_display_mode == 1)) {
 		scroll_modifier -= scroll_increment;
+		var end_modifier = (text_height + textbox_height - scroll_end) * -1;
+		if (scroll_modifier <= end_modifier) {
+			scroll_modifier = end_modifier
+		}
 	}
 	
 	// update text structs
@@ -647,13 +708,6 @@ function update() {
 
 /// @desc Draw the textbox, called by draw or draw_gui depending on "is_gui".
 function jtt_draw() {
-	if (row_i_start == undefined) {
-		exit;
-	}
-
-	draw_set_valign(fa_top);
-	draw_set_halign(fa_left);
-
 	if (global.JTT_DEBUGGING) {
 		draw_set_color(c_gray);
 		draw_set_alpha(1);
@@ -668,6 +722,13 @@ function jtt_draw() {
 		var radius = 4;
 		draw_circle(x, y, radius, false);
 	}
+	
+	if (row_i_start == undefined) {
+		exit;
+	}
+
+	draw_set_valign(fa_top);
+	draw_set_halign(fa_left);
 
 	/* To determine the y position of the text, we first find
 	the top and bottom of the box. */
