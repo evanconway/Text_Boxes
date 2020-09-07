@@ -82,7 +82,7 @@ function JTT_Text() constructor {
 	effects from other characters if necessary. The wave is a good example. */
 	index = (argument_count > 2) ? argument[2] : 0;
 	
-	text_color = (has_fx) ? effects.text_color : c_ltgray;
+	text_color = (has_fx) ? effects.text_color : c_white;
 	draw_color = text_color;
 	width = 0;
 	height = 0;

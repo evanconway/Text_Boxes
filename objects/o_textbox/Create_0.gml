@@ -15,19 +15,21 @@ chirp = snd_textbox_default;
 chirp_id = undefined;
 chirp_gain = 0.5;
 autoupdate = true;
-textbox_width = 300;
-textbox_height = 100;
+textbox_width = undefined;
+textbox_height = undefined;
 alignment_text_h = fa_left;
 alignment_text_v = fa_top;
 text_height = 0; // used for bottom and center align, calculated in next_page
-alignment_box_h = fa_center;
-alignment_box_v = fa_center;
+alignment_box_h = fa_left;
+alignment_box_v = fa_top;
 
-reading_mode = 0; // 0 for pages, 1 for scrolling
+textbox_display_mode = 0; // 0 for typing, 1 for scrolling
 scroll_modifier = 0;
 scroll_increment = 0.3;
 cursor = 0;
 cursor_row = 0;
+
+is_gui = false; // determines if drawing occures in world or gui
 
 /* This value is the point from the edge of the text box at which scrolling
 text will begin to fade out. The alpha value of a row of text is set to its
@@ -35,7 +37,7 @@ distance from the edge divided by this value. */
 scroll_fade_bound = 10;
 
 /* Both of these indicies are inclusive, they are the rows to
-be displayed. They being undefined, and are set by calling
+be displayed. They begin undefined, and are set by calling
 jtt_next_page. */
 row_i_start = undefined;
 row_i_end = undefined;
@@ -43,6 +45,7 @@ row_i_end = undefined;
 /// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
 	text_original_string = text_string;
+	text_height = 0; // scrolling requires text_height of entire list
 	var effects = new JTT_Text("", effects_default); // effects copied from default
 	for (var i = 0; i < ds_list_size(text); i++) {
 		ds_list_destroy(text[|i]);
@@ -94,9 +97,10 @@ function set_text(text_string) {
 			var word_width = text_list_width(word); // note that space is added after
 			
 			// determine line break
-			if (text_list_width(line) + word_width > textbox_width) {
+			if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
 				line_remove_last_space(line); // so lines neither start nor end with spaces, makes align easy
 				ds_list_add(text, line);
+				text_height += text_list_height(line); // scrolling requies whole text height
 				line = word;
 				if (space_found) text_list_add(line, " ", effects, index);
 				word = ds_list_create();
@@ -114,9 +118,17 @@ function set_text(text_string) {
 		line_add_word(line, word);
 		line_remove_last_space(line);
 		ds_list_add(text, line);
+		text_height += text_list_height(line); // scrolling requies whole text height
 	}
 	ds_list_destroy(word);
-	return text;
+	
+	/* When creating single line textboxes, the width and height start undefined.
+	Once we have determined the text list, we can set these values. */
+	if (textbox_width == undefined) {
+		textbox_width = text_list_width(text[|0]);
+		textbox_height = text_list_height(text[|0]);
+	}
+	//return text;
 }
 
 /// @desc Set horizontal alignment of text.
@@ -234,6 +246,7 @@ function tb_get_color(new_color) {
 	else if (new_color == "brown") color_change = make_color_rgb(102, 51, 0);
 	else if (new_color == "dkgray") color_change = c_dkgray;
 	else if (new_color == "fuchsia") color_change = c_fuchsia;
+	else if (new_color == "pink") color_change = make_color_rgb(255, 105, 180);
 	else if (new_color == "gray") color_change = c_gray;
 	else if (new_color == "green") color_change = c_green;
 	else if (new_color == "lime") color_change = c_lime;
@@ -435,9 +448,9 @@ function text_list_char_at(list, ichar) {
 /// @desc Set new display values to begin displaying text
 function jtt_next_page() {
 	typing_time = 0;
-	text_height = 0;
 	scroll_modifier = 0;
-	if (reading_mode == 0) { // pages
+	if (textbox_display_mode == 0) { // pages
+		text_height = 0;
 		/* Find start and end indicies of rows that fit in
 		the text box height. */
 		
@@ -473,7 +486,7 @@ function jtt_next_page() {
 				checking = false;
 			}
 		}
-	} else if (reading_mode == 1) { // scrolling
+	} else if (textbox_display_mode == 1) { // scrolling
 		row_i_start = 0;
 		row_i_end = ds_list_size(text) - 1;
 	}
@@ -493,7 +506,9 @@ function jtt_get_typing_finished() {
 
 /// @desc Set typing cursor values to finished.
 function jtt_set_typing_finished() {
-	if (text_original_string != undefined) {
+	if (text_original_string == undefined) {
+		show_error("Cannot set typing finished, text not set!", true);
+	} else {
 		cursor_row = row_i_end;
 		cursor = text_list_length(text[|cursor_row]);
 	}
@@ -504,6 +519,8 @@ function update() {
 	textbox_delta_time();
 	
 	// typing effect
+	/* We dont' bother to check display_mode since for scrolling textboxes, the
+	typing will automatically be set to finished. */
 	if ((row_i_start != undefined) && !jtt_get_typing_finished()) {
 		// run update logic until caught up
 		while (typing_time <= 0) {
@@ -564,7 +581,7 @@ function update() {
 	}
 	
 	// scrolling effect
-	if ((row_i_start != undefined) && (reading_mode == 1)) {
+	if ((row_i_start != undefined) && (textbox_display_mode == 1)) {
 		scroll_modifier -= scroll_increment;
 	}
 	
@@ -573,5 +590,118 @@ function update() {
 		for (var k = 0; k < ds_list_size(text[|i]); k++) {
 			text[|i][|k].update();
 		}
+	}
+}
+
+/// @desc Draw the textbox, called by draw or draw_gui depending on "is_gui".
+function jtt_draw() {
+	if (row_i_start == undefined) {
+		exit;
+	}
+
+	draw_set_valign(fa_top);
+	draw_set_halign(fa_left);
+
+	if (global.JTT_DEBUGGING) {
+		draw_set_color(c_gray);
+		draw_set_alpha(1);
+		var box_x = x;
+		var box_y = y;
+		if (alignment_box_h == fa_right) box_x -= textbox_width;
+		if (alignment_box_h == fa_center) box_x -= floor(textbox_width / 2 + 0.5);
+		if (alignment_box_v == fa_bottom) box_y -= textbox_height;
+		if (alignment_box_v == fa_center) box_y -= floor(textbox_height / 2 + 0.5);
+		draw_rectangle(box_x, box_y, box_x + textbox_width, box_y + textbox_height, true);
+		draw_set_color(c_fuchsia);
+		var radius = 4;
+		draw_circle(x, y, radius, false);
+	}
+
+	/* To determine the y position of the text, we first find
+	the top and bottom of the box. */
+	var box_top = y;
+	if (alignment_box_v == fa_bottom) box_top -= textbox_height;
+	if (alignment_box_v == fa_center) box_top -= floor(textbox_height / 2 + 0.5);
+	var box_bottom = box_top + textbox_height;
+
+	/* Now we find the starting y position of the text, we start 
+	by assuming we are scrolling the text, so the text will start at
+	the bottom. */
+	var _y = floor(box_bottom + scroll_modifier + 0.5);
+
+	// Assign different values based on alignment if page displayed. 
+	if (textbox_display_mode == 0) {
+		if (alignment_text_v == fa_top) _y = box_top;
+		if (alignment_text_v == fa_bottom) _y = box_bottom - text_height;
+		if (alignment_text_v == fa_center) _y = box_top + floor(textbox_height / 2 + 0.5) - floor(text_height / 2 + 0.5);
+	}
+
+	for (var irow = row_i_start; irow <= cursor_row; irow++) {
+		var row_height = text_list_height(text[|irow]);
+	
+		// we only draw the row if it is within the bounds of the box
+		if ((_y >= box_top) && ((_y + row_height) <= box_bottom)) {
+	
+			// Now we determine x position with same process
+			var _x = x;
+			if (alignment_box_h == fa_right) _x -= textbox_width;
+			if (alignment_box_h == fa_center) _x -= floor(textbox_width / 2 + 0.5);
+			if (alignment_text_h == fa_right) _x = _x + textbox_width - text_list_width(text[|irow]);
+			if (alignment_text_h == fa_center) _x = _x + textbox_width / 2 - text_list_width(text[|irow]) / 2;
+	
+			// irow is changed when we reach end of typing, so we store value here
+			var row_size = ds_list_size(text[|irow]);
+		
+			var _cursor_char = floor(cursor);
+		
+			// Draw each struct in the row. 
+			for (var istruct = 0; istruct < row_size; istruct++) {
+				var text_struct = text[|irow][|istruct];
+				draw_set_font(text_struct.font);
+				draw_set_color(text_struct.draw_color);
+				draw_set_alpha(text_struct.alpha);
+				var draw_x = _x + text_struct.draw_mod_x;
+				var draw_y = _y + text_struct.draw_mod_y;
+			
+				/* Here we determine the alpha of a line of text when scrolling. If the text is
+				beyond the bounding value, the alpha modifier is 1. If not, it is the percentage 
+				distance between the edge and the boudning value. Note that the bottom row takes
+				precedent over the top. */
+				var alpha_scroll_mod = 1;
+				if ((textbox_display_mode == 1) && (scroll_fade_bound > 0)) {
+					if (_y < (box_top + scroll_fade_bound)) {
+						alpha_scroll_mod = (_y - box_top) / scroll_fade_bound;
+					}
+					if ((_y + row_height) > (box_bottom - scroll_fade_bound)) {
+						alpha_scroll_mod = (box_bottom - (_y + row_height)) / scroll_fade_bound;
+					}
+				}
+				draw_set_alpha(text_struct.alpha * alpha_scroll_mod);
+			
+				// if we are not on the cursor row, we can just draw the text
+				if (irow < cursor_row) {
+					draw_text(draw_x, draw_y, text_struct.text);
+				} else {
+				
+					/* But if we are, we must check to see if the text goes beyond
+					the cursor. In which case we'll only draw a portion of the string.*/
+					var str_length = string_length(text_struct.text)
+				
+					// we subtract the length of each struct from _cursor char
+					if (str_length < _cursor_char) {
+						_cursor_char -= str_length;
+						draw_text(draw_x, draw_y, text_struct.text);
+					} else {
+						/* Once cursor char is smaller than the struct, we draw that 
+						portion of the struct. This is the end of drawing. */ 
+						istruct = row_size;
+						var _text = string_copy(text_struct.text, 1, _cursor_char);
+						draw_text(draw_x, draw_y, _text);
+					}
+				}
+				_x += text_struct.get_width();
+			}
+		}
+		_y += row_height;
 	}
 }
