@@ -454,7 +454,7 @@ function jtt_next_page() {
 		/* Find start and end indicies of rows that fit in
 		the text box height. */
 		
-		/* Set start the beginning if undefined, to 
+		/* Set start to the beginning if undefined, to 
 		the next row, or the beginning if row_i_end 
 		was already at the end of text. */
 		if (row_i_start == undefined) {
@@ -497,7 +497,7 @@ function jtt_next_page() {
 }
 
 /// @desc Return true if typing complete.
-function jtt_get_typing_finished() {
+function get_typing_finished() {
 	if (cursor_row < row_i_end) return false;
 	// if we make it here, we can assume cursor row is at final row
 	if (cursor < text_list_length(text[|cursor_row])) return false;
@@ -505,7 +505,7 @@ function jtt_get_typing_finished() {
 }
 
 /// @desc Set typing cursor values to finished.
-function jtt_set_typing_finished() {
+function set_typing_finished() {
 	if (text_original_string == undefined) {
 		show_error("Cannot set typing finished, text not set!", true);
 	} else {
@@ -519,9 +519,9 @@ function update() {
 	textbox_delta_time();
 	
 	// typing effect
-	/* We dont' bother to check display_mode since for scrolling textboxes, the
-	typing will automatically be set to finished. */
-	if ((row_i_start != undefined) && !jtt_get_typing_finished()) {
+	/* We dont' bother to check display_mode since for scrolling textboxes, 
+	the typing will automatically be set to finished. */
+	if ((row_i_start != undefined) && !get_typing_finished()) {
 		// run update logic until caught up
 		while (typing_time <= 0) {
 			typing_time += typing_time_default;
