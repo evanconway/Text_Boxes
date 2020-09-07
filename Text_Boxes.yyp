@@ -7,6 +7,7 @@
     {"id":{"name":"o_textbox","path":"objects/o_textbox/o_textbox.yy",},"order":1,},
     {"id":{"name":"o_test","path":"objects/o_test/o_test.yy",},"order":0,},
     {"id":{"name":"o_test2","path":"objects/o_test2/o_test2.yy",},"order":1,},
+    {"id":{"name":"f_handwriting","path":"fonts/f_handwriting/f_handwriting.yy",},"order":5,},
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},"order":0,},
   ],
   "Options": [

@@ -12,7 +12,7 @@ gamespeed = clamp(gamespeed, 30, 1000);
 game_set_speed(gamespeed, gamespeed_fps);
 
 if (keyboard_check_pressed(vk_space)) {
-	textbox.jtt_next_page();
+	textbox.next_page();
 }
 
 // text align

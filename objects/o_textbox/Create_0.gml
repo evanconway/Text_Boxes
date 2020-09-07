@@ -10,6 +10,11 @@ typing_time_period = 500;
 typing_time_pause = 300;
 typing_time = 0;
 
+/* If true, next_page() calls will also call set_typing_finished(). Since
+most jtt calls create textboxes that are already typed, the default is 
+true. */
+type_on_nextpage = true; 
+
 typing_increment = 2.2; // how far to increase cursor each increment
 chirp = snd_textbox_default;
 chirp_id = undefined;
@@ -38,11 +43,14 @@ scroll_fade_bound = 10;
 
 /* Both of these indicies are inclusive, they are the rows to
 be displayed. They begin undefined, and are set by calling
-jtt_next_page. */
+next_page. */
 row_i_start = undefined;
 row_i_end = undefined;
 
 /// @desc Set the text, effects included, of the textbox.
+/* If the textbox width and height are not defined, then the text generated
+will not line wrap, and width/height will be set to the width/height of the
+new text. */
 function set_text(text_string) {
 	text_original_string = text_string;
 	text_height = 0; // scrolling requires text_height of entire list
@@ -128,7 +136,7 @@ function set_text(text_string) {
 		textbox_width = text_list_width(text[|0]);
 		textbox_height = text_list_height(text[|0]);
 	}
-	//return text;
+	next_page(); // this sets the cursor and row_i values to display the text
 }
 
 /// @desc Set horizontal alignment of text.
@@ -177,6 +185,14 @@ function set_box_align_v(new_align_v) {
 		return;
 	}
 	alignment_box_v = new_align_v;
+}
+
+/// @desc Set all alignments.
+function set_alignments(box_v, box_h, text_v, text_h) {
+	set_box_align_v(box_v);
+	set_box_align_h(box_h);
+	set_text_align_v(text_v);
+	set_text_align_h(text_h);
 }
 
 /// @desc Remove space at end of line, if it exists.
@@ -445,11 +461,19 @@ function text_list_char_at(list, ichar) {
 	return undefined;
 }
 
-/// @desc Set new display values to begin displaying text
-function jtt_next_page() {
+/// @desc Set new display values to next displayable chunk of text.
+// Note that for scrolling, the entire text is always displayable.
+function next_page() {
+	if (ds_list_size(text) <= 0) {
+		show_error("Cannot go to next page, text not set!", true);
+	}
 	typing_time = 0;
 	scroll_modifier = 0;
-	if (textbox_display_mode == 0) { // pages
+	
+	// pages
+	/* This code moves row_i_start and row_i_end to the next 
+	set of rows that can fit in the textbox. */
+	if (textbox_display_mode == 0) {
 		text_height = 0;
 		/* Find start and end indicies of rows that fit in
 		the text box height. */
@@ -486,31 +510,51 @@ function jtt_next_page() {
 				checking = false;
 			}
 		}
-	} else if (textbox_display_mode == 1) { // scrolling
+	}
+	
+	// scrolling
+	if (textbox_display_mode == 1) {
 		row_i_start = 0;
 		row_i_end = ds_list_size(text) - 1;
 	}
 	
-	// set cursor
-	cursor = 0
-	cursor_row = row_i_start;
+	if (type_on_nextpage) {
+		set_typing_finished();
+	} else {
+		set_typing_start();
+	}
 }
 
 /// @desc Return true if typing complete.
 function get_typing_finished() {
 	if (cursor_row < row_i_end) return false;
-	// if we make it here, we can assume cursor row is at final row
+	
+	if (cursor_row > row_i_end) {
+		show_error("Cursor_row was larger than row_i_end. This should not be possible. Review code.", true);
+	}
+	
+	// if we make it here, cursor must be at final row
 	if (cursor < text_list_length(text[|cursor_row])) return false;
 	return true;
 }
 
 /// @desc Set typing cursor values to finished.
 function set_typing_finished() {
-	if (text_original_string == undefined) {
+	if (ds_list_size(text) <= 0) {
 		show_error("Cannot set typing finished, text not set!", true);
 	} else {
 		cursor_row = row_i_end;
 		cursor = text_list_length(text[|cursor_row]);
+	}
+}
+
+/// @desc Set typing cursor values to start of displayable chunk
+function set_typing_start() {
+	if (row_i_start == undefined) {
+		show_error("Cannot set typing start, next_page() not called!", true);
+	} else {
+		cursor = 0
+		cursor_row = row_i_start;
 	}
 }
 
