@@ -174,24 +174,6 @@ function set_text(text_string) {
 	next_page(); // this sets the cursor and row_i values to display the text
 }
 
-/// @desc Add new word to text, given current line and word.
-function text_add_linebreak(word, line, effects, index) {
-	var word_width = text_list_width(word); // note that space is added after
-	if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
-		line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
-		ds_list_add(text, line);
-		text_height += text_list_height(line); // scrolling requies whole text height
-		line = word;
-		text_list_add(line, " ", effects, index);
-		word = ds_list_create();
-	} else {
-		line_add_word(line, word);
-		text_list_add(line, " ", effects, index);
-		ds_list_clear(word);
-	}
-	return { nl: line, nw: word };
-}
-
 /// @desc Set horizontal alignment of text.
 /// @func set_text_align_h(new_align_h)
 function set_text_align_h(new_align_h) {
