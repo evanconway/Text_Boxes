@@ -331,7 +331,7 @@ function command_apply_effects(command_text, _effects) {
 					if ((c == ",") || (k == string_length(command))) {
 						/* Parameter complete, note that all effect parameters are numbers,
 						so we convert to number before adding to params list. */
-						ds_list_add(params, real(string_digits(parameter)));
+						ds_list_add(params, parameter);
 						parameter = "";
 					} else {
 						parameter += c;
@@ -342,6 +342,28 @@ function command_apply_effects(command_text, _effects) {
 			
 			var new_color = tb_get_color(command);
 			if (new_color != undefined) new_effects.text_color = new_color;
+			
+			// first parse commands that need string parameters:
+			
+			// font
+			if (command == "f") {
+				// attemp to set new font
+				var new_font = asset_get_index(params[|0]);
+				if ((new_font >= 0) && (asset_get_type(params[|0]) == asset_font)) {
+					new_effects.font = new_font;
+				}
+			}
+			
+			// now convert parameters array into numbers, and parse the rest
+			for (var p = 0; p < ds_list_size(params); p++) {
+				var number = string_digits(params[|p]);
+				if (number != "") {
+					params[|p] = real(number);
+				} else {
+					ds_list_delete(params, p);
+					p--;
+				}
+			}
 			
 			// movement effects
 			if (command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;

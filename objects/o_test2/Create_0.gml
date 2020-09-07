@@ -14,4 +14,4 @@ box_room.set_alignments(fa_center, fa_center, fa_center, fa_center);
 box_gui.set_alignments(fa_bottom, fa_right, fa_center, fa_right);
 
 box_room.set_text("I am the room text.");
-box_gui.set_text("I am the gui text. As you can see I'm quite a bit <wshake>bigger<>. Do not underestimate me... for I am <orange>MIGHTY!!!<>");
+box_gui.set_text("<f:f_handwriting offset:0,0,6,0>I am the gui text.<> As you can see I'm quite a bit <wshake>bigger<>. Do not underestimate me... for I am <orange>MIGHTY!!!<>");
