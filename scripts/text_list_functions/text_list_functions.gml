@@ -37,16 +37,30 @@ function text_list_string(list) {
 }
 
 /// @desc Remove space at end of line, if it exists.
-function line_remove_last_space(line) {
+function line_remove_bookend_spaces(line) {
 	if (ds_list_size(line) == 0) return;
-	var last_struct = line[|ds_list_size(line) - 1];
-	var text_length = string_length(last_struct.text);
-	var last_char = string_char_at(last_struct.text, text_length);
+	
+	// remove starting space
+	var struct = line[|0];
+	var text_length = string_length(struct.text);
+	var first_char = string_char_at(struct.text, 1);
+	if (first_char == " ") {
+		if (text_length == 1) {
+			ds_list_delete(line, 0);
+		} else {
+			struct.set_text(string_delete(struct.text, 1, 1));
+		}
+	}
+	
+	// remove last space
+	struct = line[|ds_list_size(line) - 1];
+	text_length = string_length(struct.text);
+	var last_char = string_char_at(struct.text, text_length);
 	if (last_char == " ") {
 		if (text_length == 1) {
 			ds_list_delete(line, ds_list_size(line) - 1);
 		} else {
-			last_struct.set_text(string_delete(last_struct.text, text_length, 1));
+			struct.set_text(string_delete(struct.text, text_length, 1));
 		}
 	}
 }

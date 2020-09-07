@@ -1,5 +1,5 @@
 global.TEXTBOX_DELTA_TIME = 0;
-global.JTT_DEBUGGING = true;
+global.JTT_DEBUGGING = false;
 
 function textbox_delta_time() {
 	global.TEXTBOX_DELTA_TIME = delta_time;

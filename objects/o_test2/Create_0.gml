@@ -3,17 +3,19 @@
 
 view_enabled = true;
 view_visible[0] = true;
-camera_set_view_pos(view_camera[0], 100, 100);
+camera_set_view_pos(view_camera[0], 0, 0);
 
 var gui_w_c = floor(display_get_gui_width() / 2 + 0.5);
 var gui_h_c = floor(display_get_gui_height() / 2 + 0.5);
 
-text = jtt_create_box_gui(gui_w_c, gui_h_c, 600, 600);
+text = jtt_create_box_typing_gui(gui_w_c, gui_h_c, 400, 300);
 text.set_alignments(fa_center, fa_center, fa_center, fa_center);
+//text.effects_default.font = f_handwriting;
+//text.effects_default.effect_m = TB_EFFECT_MOVE.SHAKE;
+//text.effects_default.shake_magnitude = 0;
+//text.effects_default.shake_time_max = 400;
 
-var greeting = "<f:f_handwriting shake:0,200>Hello!<n> It's good to meet you.<n> Welcome " +
-				"to the <pink>literature club!<no_color><n> You're gonna die... of happiness! Be sure to " +
-				"say hi to all the other members before you <244,6,98>leave<no_color> today!<n><n><n>" +
-				"may god have <red pulse>mercy<> on your soul...";
-				
-text.set_text(greeting);
+greeting = "I can add effects really easily. I just <float>put<> them right in the <pulse>text.<> " +
+			"It takes care of line wrapping and text alignment <wshake>automatically<>. " +
+			"It even makes the text <float>spill<> over into another box if it's too big for one. " +
+			"And of course the typing <wave:5>effect<> was a lot of work. ";

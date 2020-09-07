@@ -6,7 +6,7 @@ effects_default = new JTT_Text(); // effect data is stored in an unused text str
 if this value is less than the time it takes for one frame to execute, the 
 game will "type" once each frame. */
 typing_time_default = 100;
-typing_time_period = 500;
+typing_time_stop = 500;
 typing_time_pause = 300;
 typing_time = 0;
 
@@ -70,8 +70,10 @@ function set_text(text_string) {
 		For text, end_i will the location of the next space, the character just 
 		before the next "<", or the last character in the string.*/
 		
+		var end_i = undefined;
+		
 		if (string_char_at(text_string, index) == "<") {
-			var end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
+			end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
 			if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
 			var command_text = string_copy(text_string, index + 1, end_i - index - 1);
 			
@@ -79,18 +81,28 @@ function set_text(text_string) {
 			formatting. We parse those here. These need to be typed much more strictly because,
 			frankly, I'm sick of writing parsing code. */
 			if (command_text == "n") {
-				/* Line break, or new line. Note that our parser assumes words are over if command
-				tags are encountered, so we don't worry about adding the current word to the line. */
-				if (ds_list_size(line) <= 0) {
+				/* New line, or line break */
+				var word_width = text_list_width(word);
+				if ((ds_list_size(line) <= 0) && (ds_list_size(word) <= 0)) {
 					text_list_add(line, " ", effects, index);
+					ds_list_add(text, line);
+					line = ds_list_create();
+				} else if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+					line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
+					ds_list_add(text, line);
+					text_height += text_list_height(line); // scrolling requies whole text height
+					line = word;
+					word = ds_list_create();
+				} else {
+					line_add_word(line, word);
+					line_remove_bookend_spaces(line);
+					ds_list_add(text, line)
+					line = ds_list_create();
+					word = ds_list_create();
 				}
-				ds_list_add(text, line);
-				line = ds_list_create();
 			}
 			
-			
 			effects = command_apply_effects(command_text, effects);
-			index = end_i + 1;
 		} else {
 			
 			/* We only parse up to the start of the next tag, or the end of the text_string.
@@ -104,11 +116,18 @@ function set_text(text_string) {
 			if (parse_end_i <= 0) parse_end_i = total_length;
 			
 			/* To ensure correct line breaks, we have to get all the text from index to the next space,
-			or the end of the parsable text. We have to keep track of whether we found a space or not
-			because we don't include spaces when checking word width for line breaks. The space must
-			be added back once the word position is determined. Also, we start from index - 1 because 
-			the startpos parameter is exclusive. We need to be able to detect spaces by themselves. */
-			var end_i = htmlsafe_string_pos_ext(" ", text_string, index - 1);
+			or the end of the text. We have to keep track of whether we found a space or not because 
+			we don't include spaces when checking word width for line breaks. The space must be added 
+			back once the word position is determined. Also, we start from index - 1 because the startpos 
+			parameter is exclusive. We need to be able to detect spaces by themselves. */
+			
+			/* To ensure correct line breaks, we have to get all the text from index to the next space.
+			However, we have to account for command tags between index and the next space. We know that
+			a word is not over until we've hit a space, so we will mark if the space was after 
+			parse_end_i, the start of the next tag. In which case, we will not attempt to add the word
+			to the line. Note that we start from index - 1 because the startpos parameter is exclusive. 
+			We need to be able to detect spaces by themselves.*/
+			end_i = htmlsafe_string_pos_ext(" ", text_string, index - 1);
 			var space_found = (end_i > 0 && end_i <= parse_end_i) ? true : false;
 			if (end_i > parse_end_i || end_i == 0) end_i = parse_end_i;
 			
@@ -117,29 +136,21 @@ function set_text(text_string) {
 			var text_toadd = string_copy(text_string, index, text_toadd_length);
 			
 			text_list_add(word, text_toadd, effects, index);
-			var word_width = text_list_width(word); // note that space is added after
 			
 			// determine line break
-			if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
-				line_remove_last_space(line); // so lines neither start nor end with spaces, makes align easy
-				ds_list_add(text, line);
-				text_height += text_list_height(line); // scrolling requies whole text height
-				line = word;
-				if (space_found) text_list_add(line, " ", effects, index);
-				word = ds_list_create();
-			} else {
-				line_add_word(line, word);
-				if (space_found) text_list_add(line, " ", effects, index);
-				ds_list_clear(word);
+			if (space_found) {
+				var linebreak = text_add_linebreak(word, line, effects, index);
+				word = linebreak.nw;
+				line = linebreak.nl;
 			}
-			index = end_i + 1;
 		}
+		index = end_i + 1;
 	}
 	
 	// add remaining line and word values
 	if (ds_list_size(line) >  0 || ds_list_size(word) > 0) {
 		line_add_word(line, word);
-		line_remove_last_space(line);
+		line_remove_bookend_spaces(line);
 		ds_list_add(text, line);
 		text_height += text_list_height(line); // scrolling requies whole text height
 	}
@@ -152,6 +163,24 @@ function set_text(text_string) {
 		textbox_height = text_list_height(text[|0]);
 	}
 	next_page(); // this sets the cursor and row_i values to display the text
+}
+
+/// @desc Add new word to text, given current line and word.
+function text_add_linebreak(word, line, effects, index) {
+	var word_width = text_list_width(word); // note that space is added after
+	if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+		line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
+		ds_list_add(text, line);
+		text_height += text_list_height(line); // scrolling requies whole text height
+		line = word;
+		text_list_add(line, " ", effects, index);
+		word = ds_list_create();
+	} else {
+		line_add_word(line, word);
+		text_list_add(line, " ", effects, index);
+		ds_list_clear(word);
+	}
+	return { nl: line, nw: word };
 }
 
 /// @desc Set horizontal alignment of text.
@@ -268,7 +297,7 @@ function tb_get_color(new_color) {
 /// @desc Get new effects of given struct based on command_text.
 function command_apply_effects(command_text, _effects) {
 	if (command_text == "") {
-		return new JTT_Text();
+		return effects_default;
 	}
 	var new_effects = new JTT_Text("", _effects);
 	var command = "";
@@ -561,7 +590,16 @@ function update() {
 				
 				// increase the value of the cursor
 				if (_typing_increment >= 1) cursor += 1;
-				else cursor += _typing_increment;
+				else {
+					cursor += _typing_increment;
+					
+					/* There is a bug created from slop with game makers numbers. We're 
+					going to try and solve that here by forcing cursor to be a smaller
+					resolution.*/
+					cursor *= 100;
+					cursor = floor(cursor + 0.5);
+					cursor /= 100;
+				}
 				_typing_increment -= 1;
 				
 				/* Here we calculate cursor wrap. Since our code floors the cursor when
@@ -579,11 +617,11 @@ function update() {
 				}
 				
 				var char_at_cursor = text_list_char_at(text[|cursor_row], cursor);
-				if (char_at_cursor == ".") {
+				if (char_at_cursor == "." || char_at_cursor == "!" || char_at_cursor == "?") {
 					_typing_increment = 0;
-					typing_time += typing_time_period;
+					typing_time += typing_time_stop;
 				}
-				if (char_at_cursor == "," || char_at_cursor == ";") {
+				if (char_at_cursor == "," || char_at_cursor == ";" || char_at_cursor == ":") {
 					_typing_increment = 0;
 					typing_time += typing_time_pause;
 				}

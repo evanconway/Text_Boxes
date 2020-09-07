@@ -6,7 +6,7 @@
     "path": "folders/Text_Boxes.yy",
   },
   "resourceVersion": "1.0",
-  "name": "textbox_functions",
+  "name": "text_struct_functions",
   "tags": [],
   "resourceType": "GMScript",
 }
