@@ -74,6 +74,21 @@ function set_text(text_string) {
 			var end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
 			if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
 			var command_text = string_copy(text_string, index + 1, end_i - index - 1);
+			
+			/* Most commands deal with text effects, but there are a few that deal with text
+			formatting. We parse those here. These need to be typed much more strictly because,
+			frankly, I'm sick of writing parsing code. */
+			if (command_text == "n") {
+				/* Line break, or new line. Note that our parser assumes words are over if command
+				tags are encountered, so we don't worry about adding the current word to the line. */
+				if (ds_list_size(line) <= 0) {
+					text_list_add(line, " ", effects, index);
+				}
+				ds_list_add(text, line);
+				line = ds_list_create();
+			}
+			
+			
 			effects = command_apply_effects(command_text, effects);
 			index = end_i + 1;
 		} else {
@@ -188,68 +203,12 @@ function set_box_align_v(new_align_v) {
 }
 
 /// @desc Set all alignments.
+/// @func set_alignments(box_v, box_h, text_v, text_h)
 function set_alignments(box_v, box_h, text_v, text_h) {
 	set_box_align_v(box_v);
 	set_box_align_h(box_h);
 	set_text_align_v(text_v);
 	set_text_align_h(text_h);
-}
-
-/// @desc Remove space at end of line, if it exists.
-function line_remove_last_space(line) {
-	if (ds_list_size(line) == 0) return;
-	var last_struct = line[|ds_list_size(line) - 1];
-	var text_length = string_length(last_struct.text);
-	var last_char = string_char_at(last_struct.text, text_length);
-	if (last_char == " ") {
-		if (text_length == 1) {
-			ds_list_delete(line, ds_list_size(line) - 1);
-		} else {
-			last_struct.set_text(string_delete(last_struct.text, text_length, 1));
-		}
-	}
-}
-
-/// @desc Add text to existing structs if the effects are the same, otherwise create new ones.
-function line_add_word(line, word) {
-	if (ds_list_size(line) == 0) {
-		for (var i = 0; i < ds_list_size(word); i++) ds_list_add(line, word[|i]);
-		return;
-	} 
-	for (var i = 0; i < ds_list_size(word); i++) {
-		var last_struct = line[|ds_list_size(line) - 1];
-		var word_struct = word[|i];
-		if (jtt_text_fx_equal(last_struct, word_struct) && !jtt_text_req_ind_struct(word_struct)) {
-			last_struct.add_text(word[|i].text);
-		} else {
-			ds_list_add(line, word[|i]);
-		}
-	}
-}
-
-/// @desc Add text to existing structs if effects are the same, otherwise creates new ones.
-function text_list_add(list, text, effects, index) {
-	if (text == "") return;
-	if (jtt_text_req_ind_struct(effects)) {
-		for (var i = 1; i <= string_length(text); i++) {
-			var c = string_char_at(text, i);
-			ds_list_add(list, new JTT_Text(c, effects, index + i));
-		}
-		return;
-	}
-	
-	// if list is empty, add new struct
-	if (ds_list_size(list) == 0) {
-		ds_list_add(list, new JTT_Text(text, effects, index));
-		return;
-	}
-	
-	var last_struct = list[|ds_list_size(list) - 1];
-	if (jtt_text_fx_equal(effects, last_struct)) {
-			last_struct.add_text(text);
-	} else {
-		ds_list_add(list, new JTT_Text(text, effects, index));
-	}
 }
 
 /// @desc Return color based on command text.
@@ -293,16 +252,17 @@ function tb_get_color(new_color) {
 				if (detecting == 2) rgb_b += c;
 			}
 		}
-		if (is_number(rgb_r) && is_number(rgb_g) && is_number(rgb_b)) {
+		
+		var valid_rgb = true;
+		if (string_digits(rgb_r) != rgb_r) valid_rgb = false;
+		if (string_digits(rgb_g) != rgb_g) valid_rgb = false;
+		if (string_digits(rgb_b) != rgb_b) valid_rgb = false;
+		
+		if (valid_rgb) {
 			color_change = make_color_rgb(string_digits(rgb_r), string_digits(rgb_g), string_digits(rgb_b));
 		}
 	}
 	return color_change;
-}
-
-/// @desc Returns true if given string contains only number characters.
-function is_number(s) {
-	return string_digits(s) == s;
 }
 
 /// @desc Get new effects of given struct based on command_text.
@@ -410,18 +370,18 @@ function command_apply_effects(command_text, _effects) {
 			} else if (command == "shake") {
 				new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
 				if (params[|0] != undefined) {
-					new_effects.shake_magnitude = clamp(params[|0], 1, 10000);
+					new_effects.shake_magnitude = clamp(params[|0], 0, 10000);
 				}
 				if (params[|1] != undefined) {
-					new_effects.shake_time_max = clamp(params[|1], 1, 10000);
+					new_effects.shake_time_max = clamp(params[|1], 0, 10000);
 				}
 			} else if (command == "wshake") {
 				new_effects.effect_m = TB_EFFECT_MOVE.WSHAKE;
 				if (params[|0] != undefined) {
-					new_effects.shake_magnitude = clamp(params[|0], 1, 10000);
+					new_effects.shake_magnitude = clamp(params[|0], 0, 10000);
 				}
 				if (params[|1] != undefined) {
-					new_effects.shake_time_max = clamp(params[|1], 1, 10000);
+					new_effects.shake_time_max = clamp(params[|1], 0, 10000);
 				}
 			}
 			
@@ -470,17 +430,6 @@ function command_apply_effects(command_text, _effects) {
 		}
 	}
 	return new_effects;
-}
-
-/// @desc Return the character in the text list at the given character index.
-function text_list_char_at(list, ichar) {
-	ichar = floor(ichar);
-	for (var i = 0; i < ds_list_size(list); i++) {
-		var struct_text = list[|i].text;
-		if (ichar > string_length(struct_text)) ichar -= string_length(struct_text);
-		else return string_char_at(struct_text, ichar);	
-	}
-	return undefined;
 }
 
 /// @desc Set new display values to next displayable chunk of text.

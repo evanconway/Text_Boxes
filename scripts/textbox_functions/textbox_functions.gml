@@ -31,43 +31,6 @@ enum TB_EFFECT_COLOR {
 	NONE
 }
 
-/// @desc Return pixel width of ds_list of text structs.
-function text_list_width(list) {
-	var width = 0;
-	for (var i = 0; i < ds_list_size(list); i++) {
-		width += list[|i].get_width();
-	}
-	return width;
-}
-
-function text_list_height(list) {
-	var height = 0;
-	for (var i = 0; i < ds_list_size(list); i++) {
-		if (list[|i].get_height() > height) {
-			height = list[|i].get_height();
-		}
-	}
-	return height;
-}
-
-/// @desc Return the combined string length of a list of text structs.
-function text_list_length(list) {
-	var result = 0;
-	for (var i = 0; i < ds_list_size(list); i++) {
-		result += string_length(list[|i].text);
-	}
-	return result;
-}
-
-/// @desc Return the combined string value of a list of text structs.
-function text_list_string(list) {
-	var result = "'";
-	for (var i = 0; i < ds_list_size(list); i++) {
-		result += list[|i].text;
-	}
-	return result + "'";
-}
-
 /// @desc Create textbox text struct.
 /// @func JTT_Text(*text, *effects, *index)
 function JTT_Text() constructor {
@@ -214,8 +177,13 @@ function JTT_Text() constructor {
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {
 			while (shake_time <= 0) {
 				shake_time += shake_time_max;
-				draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);
-				draw_mod_y = irandom_range(shake_magnitude * -1, shake_magnitude);
+				if (shake_magnitude > 0) {
+					draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);
+					draw_mod_y = irandom_range(shake_magnitude * -1, shake_magnitude);
+				} else {
+					draw_mod_x = irandom_range(0, 1);
+					draw_mod_y = irandom_range(0, 1);
+				}
 			}
 			shake_time -= global.TEXTBOX_DELTA_TIME / 1000;
 		}
