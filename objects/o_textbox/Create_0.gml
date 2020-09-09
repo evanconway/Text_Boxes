@@ -5,45 +5,44 @@ effects_default = new JTT_Text(); // effect data is stored in an unused text str
 /* Typing time is the time, in milliseconds, between each "type". Note that
 if this value is less than the time it takes for one frame to execute, the 
 game will "type" once each frame. */
-typing_time_default = 100;
-typing_time_stop = 500;
-typing_time_pause = 300;
+typing_time_default = global.JTT_DEFAULT_TYPING_TIME;
+typing_time_stop = global.JTT_DEFAULT_TYPING_TIME_STOP;
+typing_time_pause = global.JTT_DEFAULT_TYPING_TIME_PAUSE;
 typing_time = 0;
+typing_increment = global.JTT_DEFAULT_TYPING_INCREMENT; // how far to increase cursor each increment
 
 /* If true, next_page() calls will also call set_typing_finished(). Since
 most jtt calls create textboxes that are already typed, the default is 
 true. */
 type_on_nextpage = true; 
 
-typing_increment = 2.2; // how far to increase cursor each increment
-chirp = snd_textbox_default;
+chirp = global.JTT_DEFAULT_TYPING_CHIRP;
 chirp_id = undefined;
-chirp_gain = 0.5;
-autoupdate = true;
+chirp_gain = global.JTT_DEFAULT_TYPING_CHIRP_GAIN;
 textbox_width = undefined;
 textbox_height = undefined;
-alignment_text_h = fa_left;
-alignment_text_v = fa_top;
+alignment_text_h = global.JTT_DEFAULT_ALIGN_TEXT_H;
+alignment_text_v = global.JTT_DEFAULT_ALIGN_TEXT_V;
 text_height = 0; // used for bottom and center align, calculated in next_page
-alignment_box_h = fa_left;
-alignment_box_v = fa_top;
+alignment_box_h = global.JTT_DEFAULT_ALIGN_BOX_H;
+alignment_box_v = global.JTT_DEFAULT_ALIGN_BOX_V;
 
 textbox_display_mode = 0; // 0 for typing, 1 for scrolling
 
 scroll_modifier = 0;
-scroll_increment = 0.3;
+scroll_increment = global.JTT_DEFAULT_SCROLL_INCREMENT;
 
 /* This value is the point from the edge of the text box at which scrolling
 text will begin to fade out. The alpha value of a row of text is set to its
 distance from the edge divided by this value. */ 
-scroll_fade_bound = 10;
+scroll_fade_bound = global.JTT_DEFAULT_SCROLL_FADE_BOUND;
 
 /* scroll_end is the distance the bottom of the final line must be from
 the top of the textbox before it stops scrolling. A value of 0 means the
 text will be completely off the textbox before it stops. A value of the
 height of the textbox means it will stop once the last line is completely
 visible. */
-scroll_end = 200; 
+scroll_end = global.JTT_DEFAULT_SCROLL_END; 
 
 cursor = 0;
 cursor_row = 0;
@@ -808,7 +807,9 @@ function jtt_draw() {
 					// we subtract the length of each struct from _cursor char
 					if (str_length < _cursor_char) {
 						_cursor_char -= str_length;
-						draw_text(draw_x, draw_y, text_struct.text);
+						if (str_length > 0) {
+							draw_text(draw_x, draw_y, text_struct.text);
+						}
 					} else {
 						/* Once cursor char is smaller than the struct, we draw that 
 						portion of the struct. This is the end of drawing. */ 

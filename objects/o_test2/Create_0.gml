@@ -8,14 +8,20 @@ camera_set_view_pos(view_camera[0], 0, 0);
 var gui_w_c = floor(display_get_gui_width() / 2 + 0.5);
 var gui_h_c = floor(display_get_gui_height() / 2 + 0.5);
 
-text = jtt_create_box_typing_gui(gui_w_c, gui_h_c, 300, 300);
-text.set_alignments(fa_center, fa_center, fa_center, fa_center);
-text.scroll_increment = 0.7;
-//text.effects_default.font = f_handwriting;
-//text.effects_default.effect_m = TB_EFFECT_MOVE.SHAKE;
-//text.effects_default.shake_magnitude = 0;
-//text.effects_default.shake_time_max = 400;
+global.JTT_DEFAULT_ALIGN_BOX_H = fa_center;
+global.JTT_DEFAULT_ALIGN_BOX_V = fa_center;
+global.JTT_DEFAULT_ALIGN_TEXT_H = fa_center;
+global.JTT_DEFAULT_ALIGN_TEXT_V = fa_top;
+/*
+global.JTT_DEFAULT_FONT = f_handwriting;
+global.JTT_DEFAULT_EFFECT_MOVE = TB_EFFECT_MOVE.SHAKE;
+global.JTT_DEFAULT_SHAKE_MAGNITUDE = 0;
+global.JTT_DEFAULT_SHAKE_TIME = 400;
+*/
 
-greeting = "I just <red>ne<>ed to fill this thing up with text so I can see if my linebreak code is still working properly. And also to see if the new \"advance\" function works correctly. This should be more than enough text to fill out multiple pages.";
+text = jtt_create_box_scrolling_gui(gui_w_c, gui_h_c, 600, 400);
+
+greeting = "<wave>Hello!<><n><n> Welcome to <blink>\"Just<> The Text\"!<n><n> Just <wshake:2,100>The<> <green>Text<> is a textbox system that supports numerous effects such as <chromatic>color change<>, <pulse>pulsing<>, typing, and scrolling.";
 
 text.set_text(greeting);
+text.advance();

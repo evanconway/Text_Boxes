@@ -39,13 +39,13 @@ function JTT_Text() constructor {
 	var has_fx = (argument_count > 1) ? true : false;
 	var effects = (has_fx) ? argument[1] : undefined;
 	
-	font = (has_fx) ? effects.font : f_jtt_default;
+	font = (has_fx) ? effects.font : global.JTT_DEFAULT_FONT;
 	
 	/* We keep track of the index because it lets us easily offset different
 	effects from other characters if necessary. The wave is a good example. */
 	index = (argument_count > 2) ? argument[2] : 0;
 	
-	text_color = (has_fx) ? effects.text_color : c_white;
+	text_color = (has_fx) ? effects.text_color : global.JTT_DEFAULT_COLOR;
 	draw_color = text_color;
 	width = 0;
 	height = 0;
@@ -53,50 +53,50 @@ function JTT_Text() constructor {
 	calculate_height = true;
 	draw_mod_x = 0;
 	draw_mod_y = 0;
-	effect_m = (has_fx) ? effects.effect_m : TB_EFFECT_MOVE.NONE;
-	effect_a = (has_fx) ? effects.effect_a : TB_EFFECT_ALPHA.NONE;
-	effect_c = (has_fx) ? effects.effect_c : TB_EFFECT_COLOR.NONE;
+	effect_m = (has_fx) ? effects.effect_m : global.JTT_DEFAULT_EFFECT_MOVE;
+	effect_a = (has_fx) ? effects.effect_a : global.JTT_DEFAULT_EFFECT_ALPHA;
+	effect_c = (has_fx) ? effects.effect_c : global.JTT_DEFAULT_EFFECT_COLOR;
 	alpha = 1;
 	
 	// movement effects
-	position_offset_x = (has_fx) ? effects.position_offset_x : 2;
-	position_offset_y = (has_fx) ? effects.position_offset_y : 2;
+	position_offset_x = (has_fx) ? effects.position_offset_x : global.JTT_DEFAULT_OFFSET_X;
+	position_offset_y = (has_fx) ? effects.position_offset_y : global.JTT_DEFAULT_OFFSET_Y;
 	
-	float_magnitude = (has_fx) ? effects.float_magnitude : 3;
-	float_time_max = (has_fx) ? effects.float_time_max : 55;
-	float_increment = (has_fx) ? effects.float_increment : 0.2;
+	float_magnitude = (has_fx) ? effects.float_magnitude : global.JTT_DEFAULT_FLOAT_MAGNITUDE;
+	float_time_max = (has_fx) ? effects.float_time_max : global.JTT_DEFAULT_FLOAT_TIME;
+	float_increment = (has_fx) ? effects.float_increment : global.JTT_DEFAULT_FLOAT_INCREMENT;
 	float_time = float_time_max;
 	float_value = 0;
 	
-	wave_magnitude = (has_fx) ? effects.wave_magnitude : 2;
-	wave_time_max = (has_fx) ? effects.wave_time_max : 85;
-	wave_offset = (has_fx) ? effects.wave_offset : 0.2;
+	wave_magnitude = (has_fx) ? effects.wave_magnitude : global.JTT_DEFAULT_WAVE_MAGNITUDE;
+	wave_time_max = (has_fx) ? effects.wave_time_max : global.JTT_DEFAULT_WAVE_TIME;
+	wave_offset = (has_fx) ? effects.wave_offset : global.JTT_DEFAULT_WAVE_OFFSET;
 	wave_time = wave_time_max;
 	wave_value = 0;
 	
-	shake_magnitude = (has_fx) ? effects.shake_magnitude : 1; // x/y offset will be between negative and positive of this value, inclusive
-	shake_time_max = (has_fx) ? effects.shake_time_max : 80; // time in ms that character will be at a position
+	shake_magnitude = (has_fx) ? effects.shake_magnitude : global.JTT_DEFAULT_SHAKE_MAGNITUDE; // x/y offset will be between negative and positive of this value, inclusive
+	shake_time_max = (has_fx) ? effects.shake_time_max : global.JTT_DEFAULT_SHAKE_TIME; // time in ms that character will be at a position
 	shake_time = shake_time_max;
 	
 	// alpha effects
-	pulse_alpha_max = (has_fx) ? effects.pulse_alpha_max : 1;
-	pulse_alpha_min = (has_fx) ? effects.pulse_alpha_min : 0.4;
-	pulse_time_max = (has_fx) ? effects.pulse_time_max : 80;
-	pulse_increment = (has_fx) ? effects.pulse_increment : 0.05;
+	pulse_alpha_max = (has_fx) ? effects.pulse_alpha_max : global.JTT_DEFAULT_PULSE_ALPHA_MAX;
+	pulse_alpha_min = (has_fx) ? effects.pulse_alpha_min : global.JTT_DEFAULT_PULSE_ALPHA_MIN;
+	pulse_time_max = (has_fx) ? effects.pulse_time_max : global.JTT_DEFAULT_PULSE_TIME;
+	pulse_increment = (has_fx) ? effects.pulse_increment : global.JTT_DEFAULT_PULSE_INCREMENT;
 	pulse_time = pulse_time_max;
 	
-	blink_alpha_on = (has_fx) ? effects.blink_alpha_on : 1;
-	blink_alpha_off = (has_fx) ? effects.blink_alpha_off : 0;
-	blink_time_on = (has_fx) ? effects.blink_time_on : 400;
-	blink_time_off = (has_fx) ? effects.blink_time_off :400;
+	blink_alpha_on = (has_fx) ? effects.blink_alpha_on : global.JTT_DEFAULT_BLINK_ALPHA_ON;
+	blink_alpha_off = (has_fx) ? effects.blink_alpha_off : global.JTT_DEFAULT_BLINK_ALPHA_OFF;
+	blink_time_on = (has_fx) ? effects.blink_time_on : global.JTT_DEFAULT_BLINK_TIME_ON;
+	blink_time_off = (has_fx) ? effects.blink_time_off : global.JTT_DEFAULT_BLINK_TIME_OFF;
 	blink_time = blink_time_on;
 	
 	// color effects
-	chromatic_increment = (has_fx) ? effects.chromatic_increment : 10;
-	chromatic_time_max = (has_fx) ? effects.chromatic_time_max : 30;
+	chromatic_increment = (has_fx) ? effects.chromatic_increment : global.JTT_DEFAULT_CHROMATIC_INCREMENT;
+	chromatic_time_max = (has_fx) ? effects.chromatic_time_max : global.JTT_DEFAULT_CHROMATIC_TIME;
 	chromatic_time = chromatic_time_max;
-	chromatic_max = (has_fx) ? effects.chromatic_max : 255;
-	chromatic_min = (has_fx) ? effects.chromatic_min : 0;
+	chromatic_max = (has_fx) ? effects.chromatic_max : global.JTT_DEFAULT_CHROMATIC_MAX;
+	chromatic_min = (has_fx) ? effects.chromatic_min : global.JTT_DEFAULT_CHROMATIC_MIN;
 	chromatic_r = chromatic_max;
 	chromatic_g = chromatic_min;
 	chromatic_b = chromatic_min;
