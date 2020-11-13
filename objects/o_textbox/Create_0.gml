@@ -40,8 +40,8 @@ scroll_fade_bound = global.JTT_DEFAULT_SCROLL_FADE_BOUND;
 /* scroll_end is the distance the bottom of the final line must be from
 the top of the textbox before it stops scrolling. A value of 0 means the
 text will be completely off the textbox before it stops. A value of the
-height of the textbox means it will stop once the last line is completely
-visible. */
+height of the textbox means it will stop once the last line is at the 
+bottom of the text box. */
 scroll_end = global.JTT_DEFAULT_SCROLL_END; 
 
 cursor = 0;

@@ -12,6 +12,7 @@ global.JTT_DEFAULT_ALIGN_BOX_H = fa_center;
 global.JTT_DEFAULT_ALIGN_BOX_V = fa_center;
 global.JTT_DEFAULT_ALIGN_TEXT_H = fa_center;
 global.JTT_DEFAULT_ALIGN_TEXT_V = fa_top;
+global.JTT_DEFAULT_SCROLL_INCREMENT = 1.5;
 /*
 global.JTT_DEFAULT_FONT = f_handwriting;
 global.JTT_DEFAULT_EFFECT_MOVE = TB_EFFECT_MOVE.SHAKE;

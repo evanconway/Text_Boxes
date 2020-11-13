@@ -3,6 +3,7 @@
 global.TEXTBOX_DELTA_TIME = 0;
 global.JTT_DEBUGGING = false;
 global.JTT_AUTO_UPDATE = true;
+global.JTT_ADVANCE_ON_CREATE = true;
 
 // default textbox settings
 global.JTT_DEFAULT_ALIGN_BOX_V = fa_top;
@@ -17,7 +18,7 @@ global.JTT_DEFAULT_TYPING_CHIRP = undefined;
 global.JTT_DEFAULT_TYPING_CHIRP_GAIN = 0.5;
 global.JTT_DEFAULT_SCROLL_INCREMENT = 0.3;
 global.JTT_DEFAULT_SCROLL_FADE_BOUND = 10;
-global.JTT_DEFAULT_SCROLL_END = 200;
+global.JTT_DEFAULT_SCROLL_END = 0;
 
 // default effect settings
 global.JTT_DEFAULT_FONT = f_jtt_default;
@@ -48,14 +49,15 @@ global.JTT_DEFAULT_CHROMATIC_MIN = 0 ;
 global.JTT_DEFAULT_CHROMATIC_TIME = 30;
 global.JTT_DEFAULT_CHROMATIC_INCREMENT = 10;
 
-/// @func jtt_create(x, y, text)
+/// @func jtt_create_label(x, y, text)
 function jtt_create_label(_x, _y, text) {
 	var result = instance_create_depth(_x, _y, 0, o_textbox);
 	result.set_text(text); // width and height are automatically set here
+	result.advance();
 	return result;
 }
 
-/// @func jtt_create_gui(x, y, text)
+/// @func jtt_create_label_gui(x, y, text)
 function jtt_create_label_gui(_x, _y, text) {
 	var result = jtt_create_label(_x, _y, text);
 	result.is_gui = true;
@@ -69,6 +71,9 @@ function jtt_create_box(_x, _y, width, height) {
 	result.textbox_height = height;
 	if ((argument_count > 4) && (argument[4] != undefined)) {
 		result.set_text(argument[4]);
+		if (global.JTT_ADVANCE_ON_CREATE) {
+			result.advance();
+		}
 	}
 	return result;
 }
@@ -87,6 +92,9 @@ function jtt_create_box_typing(_x, _y, width, height) {
 	result.type_on_nextpage = false;
 	if ((argument_count > 4) && (argument[4] != undefined)) {
 		result.set_text(argument[4]);
+		if (global.JTT_ADVANCE_ON_CREATE) {
+			result.advance();
+		}
 	}
 	return result;
 }
@@ -105,6 +113,9 @@ function jtt_create_box_scrolling(_x, _y, width, height) {
 	result.textbox_display_mode = 1;
 	if ((argument_count > 4) && (argument[4] != undefined)) {
 		result.set_text(argument[4]);
+		if (global.JTT_ADVANCE_ON_CREATE) {
+			result.advance();
+		}
 	}
 	return result;
 }
