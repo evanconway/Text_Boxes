@@ -11,7 +11,7 @@ typing_time_pause = global.JTT_DEFAULT_TYPING_TIME_PAUSE;
 typing_time = 0;
 typing_increment = global.JTT_DEFAULT_TYPING_INCREMENT; // how far to increase cursor each increment
 
-/* If true, next_page() calls will also call set_typing_finished(). Since
+/* If true, next_page() calls will also call set_typing_page_finished(). Since
 most jtt calls create textboxes that are already typed, the default is 
 true. */
 type_on_nextpage = true; 
@@ -530,7 +530,7 @@ function next_page() {
 	}
 	
 	if (type_on_nextpage) {
-		set_typing_finished();
+		set_typing_page_finished();
 	} else {
 		set_typing_start();
 	}
@@ -553,7 +553,7 @@ function advance() {
 			if (get_typing_page_finished()) {
 				next_page();
 			} else {
-				set_typing_finished();
+				set_typing_page_finished();
 			}
 		} else {
 			if (get_scrolling_finished()) {
@@ -568,7 +568,10 @@ function advance() {
 /// @desc Return true if the whole text fits in the box.
 /// @func get_fits_onepage()
 function get_fits_onepage() {
-	return (text_height <= textbox_height);
+	if (row_i_start == 0 && row_i_end == (ds_list_size(text) - 1)) {
+		return true;
+	}
+	return false;
 }
 
 /// @desc Return true if typing of current page complete.
@@ -595,8 +598,8 @@ function get_typing_all_finished() {
 }
 
 /// @desc Set typing cursor values to finished.
-/// @func set_typing_finished()
-function set_typing_finished() {
+/// @func set_typing_page_finished()
+function set_typing_page_finished() {
 	if (ds_list_size(text) <= 0) {
 		show_error("Cannot set typing finished, text not set!", true);
 	} else {
