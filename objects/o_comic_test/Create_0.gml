@@ -12,7 +12,9 @@ camera_set_view_pos(view_camera[0], 0, 0);
 window_set_size(res * 3, res * 3);
 display_reset(0, true);
 
-panel = Sprite1;
 state = 0;
 
-textbox = jtt_create_box_typing_gui(0, 0, 250, 100);
+global.JTT_DEFAULT_TYPING_CHIRP = snd_textbox_default;
+textbox = jtt_create_box_typing_gui(0, 0, res, res);
+textbox.set_text("I'm the first text. Notice how I appear to line wrap correctly. Let's extend this beyond what can be displayed.");
+textbox.advance();
