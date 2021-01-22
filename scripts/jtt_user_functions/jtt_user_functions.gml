@@ -51,7 +51,7 @@ global.JTT_DEFAULT_CHROMATIC_INCREMENT = 10;
 
 /// @func jtt_create_label(x, y, text)
 function jtt_create_label(_x, _y, text) {
-	var result = instance_create_depth(_x, _y, 0, o_textbox);
+	var result = instance_create_depth(_x, _y, 0, o_jtt_textbox);
 	result.set_text(text); // width and height are automatically set here
 	result.advance();
 	return result;
@@ -66,7 +66,7 @@ function jtt_create_label_gui(_x, _y, text) {
 
 /// @func jtt_create_box(x, y, width, height, *text)
 function jtt_create_box(_x, _y, width, height) {
-	var result = instance_create_depth(_x, _y, 0, o_textbox);
+	var result = instance_create_depth(_x, _y, 0, o_jtt_textbox);
 	result.textbox_width = width;
 	result.textbox_height = height;
 	if ((argument_count > 4) && (argument[4] != undefined)) {

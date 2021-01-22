@@ -55,8 +55,8 @@ next_page. */
 row_i_start = undefined;
 row_i_end = undefined;
 
-/// @desc Set the text, effects included, of the textbox.
 /// @func set_text(string)
+/// @desc Set the text, effects included, of the textbox.
 function set_text(text_string) {
 	
 	// reset typing and display values
@@ -247,6 +247,7 @@ function set_alignments(box_v, box_h, text_v, text_h) {
 	set_box_align_h(box_h);
 	set_text_align_v(text_v);
 	set_text_align_h(text_h);
+	return;
 }
 
 /// @desc Return color based on command text.
@@ -549,7 +550,7 @@ function advance() {
 		next_page();
 	} else {
 		if (textbox_display_mode == 0) {
-			if (get_typing_finished()) {
+			if (get_typing_page_finished()) {
 				next_page();
 			} else {
 				set_typing_finished();
@@ -570,9 +571,9 @@ function get_fits_onepage() {
 	return (text_height <= textbox_height);
 }
 
-/// @desc Return true if typing complete.
-/// @func get_typing_finished()
-function get_typing_finished() {
+/// @desc Return true if typing of current page complete.
+/// @func get_typing_page_finished()
+function get_typing_page_finished() {
 	if (cursor_row < row_i_end) return false;
 	
 	if (cursor_row > row_i_end) {
@@ -582,6 +583,15 @@ function get_typing_finished() {
 	// if we make it here, cursor must be at final row
 	if (cursor < text_list_length(text[|cursor_row])) return false;
 	return true;
+}
+
+/// @desc Return true if typing of all pages is complete.
+/// @func get_typing_all_finished()
+function get_typing_all_finished() {
+	if (get_typing_page_finished() && row_i_end == ds_list_size(text) - 1) {
+		return true;
+	}
+	return false;
 }
 
 /// @desc Set typing cursor values to finished.
@@ -632,7 +642,7 @@ function update() {
 	// typing effect
 	/* We don't bother to check display_mode since for scrolling textboxes, 
 	the typing will automatically be set to finished. */
-	if ((row_i_start != undefined) && !get_typing_finished()) {
+	if ((row_i_start != undefined) && !get_typing_page_finished()) {
 		// run update logic until caught up
 		while (typing_time <= 0) {
 			typing_time += typing_time_default;

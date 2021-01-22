@@ -7,7 +7,7 @@
     {"id":{"name":"jtt_user_functions","path":"scripts/jtt_user_functions/jtt_user_functions.yy",},"order":4,},
     {"id":{"name":"o_comic_test","path":"objects/o_comic_test/o_comic_test.yy",},"order":2,},
     {"id":{"name":"o_test3","path":"objects/o_test3/o_test3.yy",},"order":3,},
-    {"id":{"name":"o_textbox","path":"objects/o_textbox/o_textbox.yy",},"order":1,},
+    {"id":{"name":"o_jtt_textbox","path":"objects/o_jtt_textbox/o_jtt_textbox.yy",},"order":1,},
     {"id":{"name":"o_test","path":"objects/o_test/o_test.yy",},"order":0,},
     {"id":{"name":"o_test2","path":"objects/o_test2/o_test2.yy",},"order":1,},
     {"id":{"name":"f_handwriting","path":"fonts/f_handwriting/f_handwriting.yy",},"order":5,},
@@ -46,7 +46,7 @@
     {"folderPath":"folders/Animation Curves.yy","order":12,"resourceVersion":"1.0","name":"Animation Curves","tags":[],"resourceType":"GMFolder",},
     {"folderPath":"folders/Notes.yy","order":13,"resourceVersion":"1.0","name":"Notes","tags":[],"resourceType":"GMFolder",},
     {"folderPath":"folders/Extensions.yy","order":14,"resourceVersion":"1.0","name":"Extensions","tags":[],"resourceType":"GMFolder",},
-    {"folderPath":"folders/Text_Boxes.yy","order":15,"resourceVersion":"1.0","name":"Text_Boxes","tags":[],"resourceType":"GMFolder",},
+    {"folderPath":"folders/Just_The_Text.yy","order":15,"resourceVersion":"1.0","name":"Just_The_Text","tags":[],"resourceType":"GMFolder",},
   ],
   "AudioGroups": [
     {"targets":-1,"resourceVersion":"1.3","name":"audiogroup_default","resourceType":"GMAudioGroup",},

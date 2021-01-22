@@ -13,8 +13,8 @@
   "soundFile": "snd_textbox_default.wav",
   "duration": 0.270646,
   "parent": {
-    "name": "Text_Boxes",
-    "path": "folders/Text_Boxes.yy",
+    "name": "Just_The_Text",
+    "path": "folders/Just_The_Text.yy",
   },
   "resourceVersion": "1.0",
   "name": "snd_textbox_default",

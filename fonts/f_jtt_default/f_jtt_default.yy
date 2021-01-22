@@ -247,8 +247,8 @@
   "canGenerateBitmap": true,
   "maintainGms1Font": false,
   "parent": {
-    "name": "Text_Boxes",
-    "path": "folders/Text_Boxes.yy",
+    "name": "Just_The_Text",
+    "path": "folders/Just_The_Text.yy",
   },
   "resourceVersion": "1.0",
   "name": "f_jtt_default",
