@@ -733,6 +733,10 @@ function update() {
 
 /// @desc Draw the textbox, called by draw or draw_gui depending on "is_gui".
 function jtt_draw() {
+	var original_color = draw_get_color();
+	var original_alpha = draw_get_alpha();
+	var original_font = draw_get_font();
+	
 	if (global.JTT_DEBUGGING) {
 		draw_set_color(c_gray);
 		draw_set_alpha(1);
@@ -844,4 +848,8 @@ function jtt_draw() {
 		}
 		_y += row_height;
 	}
+	
+	draw_set_color(original_color);
+	draw_set_alpha(original_alpha);
+	draw_set_font(original_font);
 }
