@@ -1,6 +1,5 @@
 // These functions are for the user to create different kinds of text boxes.
 
-global.TEXTBOX_DELTA_TIME = 0;
 global.JTT_DEBUGGING = false;
 global.JTT_AUTO_UPDATE = true;
 global.JTT_ADVANCE_ON_CREATE = true;

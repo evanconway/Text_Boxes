@@ -1,5 +1,3 @@
-global.TEXTBOX_DELTA_TIME = 0;
-global.JTT_DEBUGGING = true;
 
 enum TB_EFFECT_MOVE {
 	OFFSET,

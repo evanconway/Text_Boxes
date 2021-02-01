@@ -663,8 +663,6 @@ function jtt_textbox() constructor{
 	/// @desc Determine character typing, and update char structs.
 	update = function() {
 		
-		//textbox_delta_time();
-		
 		// typing effect
 		/* We don't bother to check display_mode since for scrolling textboxes, 
 		the typing will automatically be set to finished. */
