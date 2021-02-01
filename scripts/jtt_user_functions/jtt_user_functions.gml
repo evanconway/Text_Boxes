@@ -49,28 +49,21 @@ global.JTT_DEFAULT_CHROMATIC_MIN = 0 ;
 global.JTT_DEFAULT_CHROMATIC_TIME = 30;
 global.JTT_DEFAULT_CHROMATIC_INCREMENT = 10;
 
-/// @func jtt_create_label(x, y, text)
-function jtt_create_label(_x, _y, text) {
-	var result = instance_create_depth(_x, _y, 0, o_jtt_textbox);
+/// @func jtt_create_label(text)
+function jtt_create_label(text) {
+	var result = new jtt_textbox();
 	result.set_text(text); // width and height are automatically set here
 	result.advance();
 	return result;
 }
 
-/// @func jtt_create_label_gui(x, y, text)
-function jtt_create_label_gui(_x, _y, text) {
-	var result = jtt_create_label(_x, _y, text);
-	result.is_gui = true;
-	return result;
-}
-
-/// @func jtt_create_box(x, y, width, height, *text)
-function jtt_create_box(_x, _y, width, height) {
-	var result = instance_create_depth(_x, _y, 0, o_jtt_textbox);
+/// @func jtt_create_box(width, height, *text)
+function jtt_create_box(width, height) {
+	var result = new jtt_textbox();
 	result.textbox_width = width;
 	result.textbox_height = height;
-	if ((argument_count > 4) && (argument[4] != undefined)) {
-		result.set_text(argument[4]);
+	if ((argument_count > 2) && (is_string(argument[2]))) {
+		result.set_text(argument[2]);
 		if (global.JTT_ADVANCE_ON_CREATE) {
 			result.advance();
 		}
@@ -78,20 +71,12 @@ function jtt_create_box(_x, _y, width, height) {
 	return result;
 }
 
-/// @func jtt_create_box_gui(x, y, width, height, *text)
-function jtt_create_box_gui(_x, _y, width, height) {
-	var text = (argument_count > 4) ? argument[4] : undefined;
-	var result = jtt_create_box(_x, _y, width, height, text);
-	result.is_gui = true;
-	return result;
-}
-
-/// @func jtt_create_box_typing(x, y, width, height, *text)
-function jtt_create_box_typing(_x, _y, width, height) {
-	var result = jtt_create_box(_x, _y, width, height);
+/// @func jtt_create_box_typing(width, height, *text)
+function jtt_create_box_typing(_width, _height) {
+	var result = jtt_create_box(_width, _height);
 	result.type_on_nextpage = false;
-	if ((argument_count > 4) && (argument[4] != undefined)) {
-		result.set_text(argument[4]);
+	if ((argument_count > 2) && (argument[2] != undefined)) {
+		result.set_text(argument[2]);
 		if (global.JTT_ADVANCE_ON_CREATE) {
 			result.advance();
 		}
@@ -99,31 +84,15 @@ function jtt_create_box_typing(_x, _y, width, height) {
 	return result;
 }
 
-/// @func jtt_create_box_typing_gui(x, y, width, height, *text)
-function jtt_create_box_typing_gui(_x, _y, width, height) {
-	var text = (argument_count > 4) ? argument[4] : undefined;
-	var result = jtt_create_box_typing(_x, _y, width, height, text);
-	result.is_gui = true;
-	return result;
-}
-
-/// @func jtt_create_box_scrolling(x, y, width, height, *text)
-function jtt_create_box_scrolling(_x, _y, width, height) {
-	var result = jtt_create_box(_x, _y, width, height);
+/// @func jtt_create_box_scrolling(width, height, *text)
+function jtt_create_box_scrolling(width, _height) {
+	var result = jtt_create_box(width, _height);
 	result.textbox_display_mode = 1;
-	if ((argument_count > 4) && (argument[4] != undefined)) {
-		result.set_text(argument[4]);
+	if ((argument_count > 2) && (argument[2] != undefined)) {
+		result.set_text(argument[2]);
 		if (global.JTT_ADVANCE_ON_CREATE) {
 			result.advance();
 		}
 	}
-	return result;
-}
-
-/// @func jtt_create_box_scrolling_gui(x, y, width, height, *text)
-function jtt_create_box_scrolling_gui(_x, _y, width, height) {
-	var text = (argument_count > 4) ? argument[4] : undefined;
-	var result = jtt_create_box_scrolling(_x, _y, width, height, text);
-	result.is_gui = true;
 	return result;
 }

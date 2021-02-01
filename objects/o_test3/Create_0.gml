@@ -1,2 +1,0 @@
-
-textbox = jtt_create_box_typing_gui(100, 100, 300, 300, "The quick <brown>brown<> <orange>fox<> <wshake>jumps<> over the <float>lazy<> <chromatic wave>dog<>. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.");

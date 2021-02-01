@@ -549,7 +549,7 @@ function jtt_textbox() constructor{
 		states: text set but typing/scrolling not started, typing/scrolling started
 		but not finished, and typing/scrolling finished. This detects which state
 		the box is in, and sets it to the next one. */
-	
+		
 		/* next_page() sets up the starting values if the text been set but not begun.
 		It works for both display modes. */
 		if (row_i_start == undefined) {
@@ -646,6 +646,9 @@ function jtt_textbox() constructor{
 
 	/// @desc Determine character typing, and update char structs.
 	update = function() {
+		
+		textbox_delta_time();
+		
 		// typing effect
 		/* We don't bother to check display_mode since for scrolling textboxes, 
 		the typing will automatically be set to finished. */
@@ -736,7 +739,8 @@ function jtt_textbox() constructor{
 	}
 
 	/// @desc Draw the textbox.
-	jtt_draw = function() {
+	/// @func draw(x, y)
+	draw = function(x, y) {
 		if (global.JTT_AUTO_UPDATE) update();
 		
 		var original_color = draw_get_color();
