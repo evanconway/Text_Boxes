@@ -360,12 +360,26 @@ function jtt_textbox() constructor{
 			
 				// now convert parameters array into numbers, and parse the rest
 				for (var p = 0; p < ds_list_size(params); p++) {
-					var number = real(params[|p]);
-					if (number != "") {
-						params[|p] = real(number);
+					/* 
+					A key parameter is "nc" or "no change". This will fill the slot of a
+					parameter list, but make no changes. Useful for when you only want to
+					change the second parameter in an effect. If the parameter is "nc", we
+					skip over it
+					*/
+					
+					if (params[|p] == "nc") {
+						params[|p] = undefined;
 					} else {
-						ds_list_delete(params, p);
-						p--;
+						/*
+						Here we'll attempt to convert the parameter to a number. If we can't,
+						The user has given improper input, and we'll throw an error.
+						*/
+						try {
+							params[|p] = real(params[|p]);
+						} catch (err) {
+							show_debug_message(err);
+							show_error("JTT Error: Text effect param (" + string(params[|p] + ") is not a real number!"), true);
+						}
 					}
 				}
 			
@@ -459,6 +473,15 @@ function jtt_textbox() constructor{
 				if (command == "no_color") new_effects.effect_c = TB_EFFECT_COLOR.NONE;
 				else if (command == "chromatic") {
 					new_effects.effect_c = TB_EFFECT_COLOR.CHROMATIC;
+					if (params[|0] != undefined) {
+						new_effects.chromatic_max = clamp(params[|0], 0, 255);
+					}
+					if (params[|1] != undefined) {
+						new_effects.chromatic_min = clamp(params[|1], 0, 255);
+					}
+					if (params[|2] != undefined) {
+						new_effects.chromatic_increment = params[|2];
+					}
 				}
 			
 				ds_list_destroy(params);

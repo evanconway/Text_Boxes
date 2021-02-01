@@ -42,9 +42,9 @@ global.JTT_DEFAULT_BLINK_ALPHA_ON = 1;
 global.JTT_DEFAULT_BLINK_ALPHA_OFF = 0;
 global.JTT_DEFAULT_BLINK_TIME_ON = 40; // number of updates text visible, integers only
 global.JTT_DEFAULT_BLINK_TIME_OFF = 40; // number of updates text invisible, integers only
-global.JTT_DEFAULT_CHROMATIC_MAX = 255;
-global.JTT_DEFAULT_CHROMATIC_MIN = 0 ;
-global.JTT_DEFAULT_CHROMATIC_INCREMENT = 5;
+global.JTT_DEFAULT_CHROMATIC_MAX = 255; // max rgb value for each color red, green, blue
+global.JTT_DEFAULT_CHROMATIC_MIN = 0 ; // min rgb value for each color red, green, blue
+global.JTT_DEFAULT_CHROMATIC_INCREMENT = 5; // change in rgb each update
 
 /// @func jtt_create_label(text)
 function jtt_create_label(text) {
