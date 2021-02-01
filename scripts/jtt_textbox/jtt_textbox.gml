@@ -406,21 +406,21 @@ function jtt_textbox() constructor{
 				} else if (command == "wave") {
 					new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
 					if (params[|0] != undefined) {
-						new_effects.wave_magnitude = clamp(params[|0], 1, 10000);
+						new_effects.wave_magnitude = clamp(params[|0], 0, 10000);
 					}
 					if (params[|1] != undefined) {
-						new_effects.wave_increment = clamp(params[|1], 1, 10000);
+						new_effects.wave_increment = clamp(params[|1], 0, 10000);
 					}
 					if (params[|2] != undefined) {
-						new_effects.wave_offset = clamp((params[|2] / 1000), 0, 2);
+						new_effects.wave_offset = clamp((params[|2]), 0, 2 * pi);
 					}
 				} else if (command == "float") {
 					new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
 					if (params[|0] != undefined) {
-						new_effects.float_magnitude = clamp(params[|0], 1, 10000);
+						new_effects.float_magnitude = clamp(params[|0], 0, 10000);
 					}
 					if (params[|1] != undefined) {
-						new_effects.float_increment = clamp((params[|2] / 1000), 0, 2);
+						new_effects.float_increment = clamp((params[|2]), 0, 2 * pi);
 					}
 				} else if (command == "shake") {
 					new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
@@ -445,27 +445,27 @@ function jtt_textbox() constructor{
 				else if (command == "pulse") {
 					new_effects.effect_a = TB_EFFECT_ALPHA.PULSE;
 					if (params[|0] != undefined) {
-						new_effects.pulse_alpha_max = clamp((params[|0] / 1000), new_effects.pulse_alpha_min, 2000);
+						new_effects.pulse_alpha_max = clamp((params[|0]), 0, 1);
 					}
 					if (params[|1] != undefined) {
-						new_effects.pulse_alpha_min = clamp((params[|1] / 1000), 0, new_effects.pulse_alpha_max);
+						new_effects.pulse_alpha_min = clamp((params[|1]), 0, new_effects.pulse_alpha_max);
 					}
 					if (params[|2] != undefined) {
-						new_effects.pulse_increment = clamp((params[|3] / 1000), 0, 1000);
+						new_effects.pulse_increment = clamp((params[|3]), 0, 1);
 					}
 				} else if (command == "blink") {
 					new_effects.effect_a = TB_EFFECT_ALPHA.BLINK;
 					if (params[|0] != undefined) {
-						new_effects.blink_alpha_on = clamp((params[|0] / 1000), new_effects.blink_alpha_off, 1000);
+						new_effects.blink_alpha_on = clamp((params[|0]), 0, 1);
 					}
 					if (params[|1] != undefined) {
-						new_effects.blink_alpha_off = clamp((params[|1] / 1000), 0, new_effects.blink_alpha_on);
+						new_effects.blink_alpha_off = clamp((params[|1]), 0, 1);
 					}
 					if (params[|2] != undefined) {
-						new_effects.blink_time_on = clamp(params[|2], 1, 10000);
+						new_effects.blink_time_on = params[|2];
 					}
 					if (params[|3] != undefined) {
-						new_effects.blink_time_off = clamp(params[|3], 1, 10000);
+						new_effects.blink_time_off = params[|3];
 					}
 				}
 			
