@@ -67,9 +67,8 @@ function JTT_Text() constructor {
 	float_value = 0;
 	
 	wave_magnitude = (has_fx) ? effects.wave_magnitude : global.JTT_DEFAULT_WAVE_MAGNITUDE;
-	wave_time_max = (has_fx) ? effects.wave_time_max : global.JTT_DEFAULT_WAVE_TIME;
+	wave_increment = (has_fx) ? effects.wave_increment: global.JTT_DEFAULT_WAVE_INCREMENT;
 	wave_offset = (has_fx) ? effects.wave_offset : global.JTT_DEFAULT_WAVE_OFFSET;
-	wave_time = wave_time_max;
 	wave_value = 0;
 	
 	shake_magnitude = (has_fx) ? effects.shake_magnitude : global.JTT_DEFAULT_SHAKE_MAGNITUDE; // x/y offset will be between negative and positive of this value, inclusive
@@ -151,21 +150,17 @@ function JTT_Text() constructor {
 		
 		if (effect_m == TB_EFFECT_MOVE.WAVE) {
 			draw_mod_x = 0;
-			while (wave_time <= 0) {
-				wave_time += wave_time_max;
-				
-				/* The wave value is how we keep track of the offset between characters. Offset is designed
-				to be the position in the sine function you want the next character to be in terms of pi. 
-				So if your offset is 1, then when a character is at 3pi, the next character will be at 4pi,
-				the next at 5pi, and so on.*/
-				wave_value += wave_offset; 
-				
-			}
-			wave_time -= global.TEXTBOX_DELTA_TIME / 1000;
+			wave_value += wave_increment;
+			/* The wave value is how we keep track of the offset between characters. Offset is designed
+			to be the position in the sine function you want the next character to be in terms of pi. 
+			So if your offset is 1, then when a character is at 3pi, the next character will be at 4pi,
+			the next at 5pi, and so on.*/
+			//wave_value += wave_offset; 
+			
 			/* Notice the index modifier in the sin function. This ensures that each character using this
 			effect recieves different position. The -1 ensures the values move through in reverse, which
 			makes the first character look like it's "leading" the wave. */
-			draw_mod_y = floor(sin((index * -1 * wave_offset + wave_value) * pi) * wave_magnitude + 0.5);
+			draw_mod_y = floor(sin((index * -1 * wave_offset + wave_value)) * wave_magnitude + 0.5);
 		}
 		
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {
@@ -285,7 +280,7 @@ function jtt_text_fx_equal(a, b) {
 	if (a.float_magnitude != b.float_magnitude) return false;
 	if (a.float_increment != b.float_increment) return false;
 	if (a.wave_magnitude != b.wave_magnitude) return false;
-	if (a.wave_time_max != b.wave_time_max) return false;
+	if (a.wave_increment != b.wave_increment) return false;
 	if (a.wave_offset != b.wave_offset) return false;
 	if (a.shake_magnitude != b.shake_magnitude) return false;
 	if (a.shake_time_max != b.shake_time_max) return false;
