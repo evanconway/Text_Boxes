@@ -30,23 +30,21 @@ global.JTT_DEFAULT_OFFSET_X = 2;
 global.JTT_DEFAULT_OFFSET_Y = 2;
 global.JTT_DEFAULT_FLOAT_MAGNITUDE = 3; // distance up/down in pixels text will float
 global.JTT_DEFAULT_FLOAT_INCREMENT = 0.07; // amount to increase position along sine function
-global.JTT_DEFAULT_WAVE_MAGNITUDE = 2;
+global.JTT_DEFAULT_WAVE_MAGNITUDE = 2; // distance up/down in pixels text will wave
 global.JTT_DEFAULT_WAVE_INCREMENT = 0.1; // amount to increase position along sine function
 global.JTT_DEFAULT_WAVE_OFFSET = 1.2; // amount each character offset along sine function
-global.JTT_DEFAULT_SHAKE_MAGNITUDE = 2; // distance up/down in pixels text will wave
-global.JTT_DEFAULT_SHAKE_TIME = 80;
+global.JTT_DEFAULT_SHAKE_MAGNITUDE = 2; // distance up/down/left/right in pixels text will shake, 0 yields 1 pixel shake
+global.JTT_DEFAULT_SHAKE_TIME = 0.2; // number of shakes per update, non-integer values accepted
 global.JTT_DEFAULT_PULSE_ALPHA_MAX = 1;
 global.JTT_DEFAULT_PULSE_ALPHA_MIN = 0.4;
-global.JTT_DEFAULT_PULSE_TIME = 80;
-global.JTT_DEFAULT_PULSE_INCREMENT = 0.05;
+global.JTT_DEFAULT_PULSE_INCREMENT = 0.01; // amount alpha changed each update
 global.JTT_DEFAULT_BLINK_ALPHA_ON = 1;
 global.JTT_DEFAULT_BLINK_ALPHA_OFF = 0;
-global.JTT_DEFAULT_BLINK_TIME_ON = 500;
-global.JTT_DEFAULT_BLINK_TIME_OFF = 167;
+global.JTT_DEFAULT_BLINK_TIME_ON = 40; // number of updates text visible, integers only
+global.JTT_DEFAULT_BLINK_TIME_OFF = 40; // number of updates text invisible, integers only
 global.JTT_DEFAULT_CHROMATIC_MAX = 255;
 global.JTT_DEFAULT_CHROMATIC_MIN = 0 ;
-global.JTT_DEFAULT_CHROMATIC_TIME = 30;
-global.JTT_DEFAULT_CHROMATIC_INCREMENT = 10;
+global.JTT_DEFAULT_CHROMATIC_INCREMENT = 5;
 
 /// @func jtt_create_label(text)
 function jtt_create_label(text) {

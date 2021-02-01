@@ -72,15 +72,13 @@ function JTT_Text() constructor {
 	wave_value = 0;
 	
 	shake_magnitude = (has_fx) ? effects.shake_magnitude : global.JTT_DEFAULT_SHAKE_MAGNITUDE; // x/y offset will be between negative and positive of this value, inclusive
-	shake_time_max = (has_fx) ? effects.shake_time_max : global.JTT_DEFAULT_SHAKE_TIME; // time in ms that character will be at a position
-	shake_time = shake_time_max;
+	shake_time = (has_fx) ? effects.shake_time : global.JTT_DEFAULT_SHAKE_TIME; // number of shakes per update
+	shake_value = 0;
 	
 	// alpha effects
 	pulse_alpha_max = (has_fx) ? effects.pulse_alpha_max : global.JTT_DEFAULT_PULSE_ALPHA_MAX;
 	pulse_alpha_min = (has_fx) ? effects.pulse_alpha_min : global.JTT_DEFAULT_PULSE_ALPHA_MIN;
-	pulse_time_max = (has_fx) ? effects.pulse_time_max : global.JTT_DEFAULT_PULSE_TIME;
 	pulse_increment = (has_fx) ? effects.pulse_increment : global.JTT_DEFAULT_PULSE_INCREMENT;
-	pulse_time = pulse_time_max;
 	
 	blink_alpha_on = (has_fx) ? effects.blink_alpha_on : global.JTT_DEFAULT_BLINK_ALPHA_ON;
 	blink_alpha_off = (has_fx) ? effects.blink_alpha_off : global.JTT_DEFAULT_BLINK_ALPHA_OFF;
@@ -90,8 +88,6 @@ function JTT_Text() constructor {
 	
 	// color effects
 	chromatic_increment = (has_fx) ? effects.chromatic_increment : global.JTT_DEFAULT_CHROMATIC_INCREMENT;
-	chromatic_time_max = (has_fx) ? effects.chromatic_time_max : global.JTT_DEFAULT_CHROMATIC_TIME;
-	chromatic_time = chromatic_time_max;
 	chromatic_max = (has_fx) ? effects.chromatic_max : global.JTT_DEFAULT_CHROMATIC_MAX;
 	chromatic_min = (has_fx) ? effects.chromatic_min : global.JTT_DEFAULT_CHROMATIC_MIN;
 	chromatic_r = chromatic_max;
@@ -164,8 +160,9 @@ function JTT_Text() constructor {
 		}
 		
 		if ((effect_m == TB_EFFECT_MOVE.SHAKE) || (effect_m == TB_EFFECT_MOVE.WSHAKE)) {
-			while (shake_time <= 0) {
-				shake_time += shake_time_max;
+			shake_value += shake_time;
+			while (shake_value >= 1) {
+				shake_value -= 1;
 				if (shake_magnitude > 0) {
 					draw_mod_x = irandom_range(shake_magnitude * -1, shake_magnitude);
 					draw_mod_y = irandom_range(shake_magnitude * -1, shake_magnitude);
@@ -174,7 +171,6 @@ function JTT_Text() constructor {
 					draw_mod_y = irandom_range(0, 1);
 				}
 			}
-			shake_time -= global.TEXTBOX_DELTA_TIME / 1000;
 		}
 		
 		// alpha effects
@@ -183,30 +179,35 @@ function JTT_Text() constructor {
 		}
 		
 		if (effect_a == TB_EFFECT_ALPHA.PULSE) {
-			while (pulse_time <= 0) {
-				pulse_time += pulse_time_max;
-				alpha += pulse_increment;
-				if (alpha >= pulse_alpha_max) {
-					alpha = pulse_alpha_max;
-					pulse_increment *= -1;
-				}
-				if (alpha <= pulse_alpha_min) {
-					alpha = pulse_alpha_min;
-					pulse_increment *= -1;
-				}
+			alpha += pulse_increment;
+			if (alpha >= pulse_alpha_max) {
+				alpha = pulse_alpha_max;
+				pulse_increment *= -1;
 			}
-			pulse_time -= global.TEXTBOX_DELTA_TIME / 1000;
+			if (alpha <= pulse_alpha_min) {
+				alpha = pulse_alpha_min;
+				pulse_increment *= -1;
+			}
 		}
 		
 		if (effect_a == TB_EFFECT_ALPHA.BLINK) {
-			while (blink_time <= 0) {
-				if (alpha == blink_alpha_on) blink_time += blink_time_off;
-				if (alpha == blink_alpha_off) blink_time += blink_time_on;
-				
-				if (alpha == blink_alpha_on) alpha = blink_alpha_off;
-				else alpha = blink_alpha_on;
+			/*
+			Blink time will be set positive when counting time 
+			on, and negative when counting time off
+			*/
+			if (blink_time > 0) {
+				alpha = blink_alpha_on;
+				blink_time -= 1;
+				if (blink_time <= 0) {
+					blink_time = blink_time_off * -1;
+				}
+			} else {
+				alpha = blink_alpha_off;
+				blink_time += 1;
+				if (blink_time >= 0) {
+					blink_time = blink_time_on;
+				}
 			}
-			blink_time -= global.TEXTBOX_DELTA_TIME / 1000;
 		}
 		
 		// color effects
@@ -215,47 +216,44 @@ function JTT_Text() constructor {
 		}
 		
 		if (effect_c == TB_EFFECT_COLOR.CHROMATIC) {
-			while (chromatic_time <= 0) {
-				chromatic_time += chromatic_time_max;
-				if (chromatic_state == 0) {
-					chromatic_g += chromatic_increment;
-					if (chromatic_g >= chromatic_max) {
-						chromatic_g = chromatic_max;
-						chromatic_state += 1;
-					}
-				} else if (chromatic_state == 1) {
-					chromatic_r -= chromatic_increment;
-					if (chromatic_r <= chromatic_min) {
-						chromatic_r = chromatic_min;
-						chromatic_state += 1;
-					}
-				} else if (chromatic_state == 2) {
-					chromatic_b += chromatic_increment;
-					if (chromatic_b >= chromatic_max) {
-						chromatic_b = chromatic_max;
-						chromatic_state += 1;
-					}
-				} else if (chromatic_state == 3) {
-					chromatic_g -= chromatic_increment;
-					if (chromatic_g <= chromatic_min) {
-						chromatic_g = chromatic_min;
-						chromatic_state += 1;
-					}
-				} else if (chromatic_state == 4) {
-					chromatic_r += chromatic_increment;
-					if (chromatic_r >= chromatic_max) {
-						chromatic_r = chromatic_max;
-						chromatic_state += 1;
-					}
-				} else if (chromatic_state == 5) {
-					chromatic_b -= chromatic_increment;
-					if (chromatic_b <= chromatic_min) {
-						chromatic_b = chromatic_min;
-						chromatic_state = 0;
-					}
+			
+			if (chromatic_state == 0) {
+				chromatic_g += chromatic_increment;
+				if (chromatic_g >= chromatic_max) {
+					chromatic_g = chromatic_max;
+					chromatic_state += 1;
+				}
+			} else if (chromatic_state == 1) {
+				chromatic_r -= chromatic_increment;
+				if (chromatic_r <= chromatic_min) {
+					chromatic_r = chromatic_min;
+					chromatic_state += 1;
+				}
+			} else if (chromatic_state == 2) {
+				chromatic_b += chromatic_increment;
+				if (chromatic_b >= chromatic_max) {
+					chromatic_b = chromatic_max;
+					chromatic_state += 1;
+				}
+			} else if (chromatic_state == 3) {
+				chromatic_g -= chromatic_increment;
+				if (chromatic_g <= chromatic_min) {
+					chromatic_g = chromatic_min;
+					chromatic_state += 1;
+				}
+			} else if (chromatic_state == 4) {
+				chromatic_r += chromatic_increment;
+				if (chromatic_r >= chromatic_max) {
+					chromatic_r = chromatic_max;
+					chromatic_state += 1;
+				}
+			} else if (chromatic_state == 5) {
+				chromatic_b -= chromatic_increment;
+				if (chromatic_b <= chromatic_min) {
+					chromatic_b = chromatic_min;
+					chromatic_state = 0;
 				}
 			}
-			chromatic_time -= global.TEXTBOX_DELTA_TIME / 1000;
 			draw_color = make_color_rgb(chromatic_r, chromatic_g, chromatic_b);
 		}
 	}
@@ -283,17 +281,15 @@ function jtt_text_fx_equal(a, b) {
 	if (a.wave_increment != b.wave_increment) return false;
 	if (a.wave_offset != b.wave_offset) return false;
 	if (a.shake_magnitude != b.shake_magnitude) return false;
-	if (a.shake_time_max != b.shake_time_max) return false;
+	if (a.shake_time != b.shake_time) return false;
 	if (a.pulse_alpha_max != b.pulse_alpha_max) return false;
 	if (a.pulse_alpha_min != b.pulse_alpha_min ) return false;
 	if (a.pulse_increment != b.pulse_increment) return false;
-	if (a.pulse_time_max != b.pulse_time_max) return false;
 	if (a.blink_alpha_on != b.blink_alpha_on) return false;
 	if (a.blink_alpha_off != b.blink_alpha_off) return false;
 	if (a.blink_time_on != b.blink_time_on) return false;
 	if (a.blink_time_off != b.blink_time_off) return false;
 	if (a.chromatic_increment != b.chromatic_increment) return false;
-	if (a.chromatic_time_max != b.chromatic_time_max) return false;
 	if (a.chromatic_max != b.chromatic_max) return false;
 	if (a.chromatic_min != b.chromatic_min) return false;
 	return true;
