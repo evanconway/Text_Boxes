@@ -56,11 +56,6 @@ function jtt_textbox() constructor{
 	row_i_start = undefined;
 	row_i_end = undefined;
 
-	/// @func test
-	test = function() {
-		show_debug_message("test");
-	}
-
 	/// @desc Set the text, effects included, of the textbox.
 	/// @func set_text(string)
 	set_text = function(text_string) {
@@ -162,6 +157,12 @@ function jtt_textbox() constructor{
 				// determine line break
 				var word_width = text_list_width(word); // note that space is added after
 				if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+					/*
+					If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
+					We throw an error to force the user to change something, because our code cannot accomodate this.
+					*/
+					if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
+					
 					line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
 					ds_list_add(text, line);
 					text_height += text_list_height(line); // scrolling requies whole text height
