@@ -334,8 +334,7 @@ function jtt_textbox() constructor{
 						var c = string_char_at(command, k);
 						if (k == string_length(command)) parameter += c;
 						if ((c == ",") || (k == string_length(command))) {
-							/* Parameter complete, note that all effect parameters are numbers,
-							so we convert to number before adding to params list. */
+							// Parameter complete add to params list.
 							ds_list_add(params, parameter);
 							parameter = "";
 						} else {
@@ -361,7 +360,7 @@ function jtt_textbox() constructor{
 			
 				// now convert parameters array into numbers, and parse the rest
 				for (var p = 0; p < ds_list_size(params); p++) {
-					var number = string_digits(params[|p]);
+					var number = real(params[|p]);
 					if (number != "") {
 						params[|p] = real(number);
 					} else {
@@ -396,7 +395,7 @@ function jtt_textbox() constructor{
 						new_effects.wave_magnitude = clamp(params[|0], 1, 10000);
 					}
 					if (params[|1] != undefined) {
-						new_effects.wave_time_max = clamp(params[|1], 1, 10000);
+						new_effects.wave_increment = clamp(params[|1], 1, 10000);
 					}
 					if (params[|2] != undefined) {
 						new_effects.wave_offset = clamp((params[|2] / 1000), 0, 2);
@@ -407,9 +406,6 @@ function jtt_textbox() constructor{
 						new_effects.float_magnitude = clamp(params[|0], 1, 10000);
 					}
 					if (params[|1] != undefined) {
-						new_effects.float_time_max = clamp(params[|1], 1, 10000);
-					}
-					if (params[|2] != undefined) {
 						new_effects.float_increment = clamp((params[|2] / 1000), 0, 2);
 					}
 				} else if (command == "shake") {
@@ -441,9 +437,6 @@ function jtt_textbox() constructor{
 						new_effects.pulse_alpha_min = clamp((params[|1] / 1000), 0, new_effects.pulse_alpha_max);
 					}
 					if (params[|2] != undefined) {
-						new_effects.pulse_time_max = clamp(params[|2], 1, 10000);
-					}
-					if (params[|3] != undefined) {
 						new_effects.pulse_increment = clamp((params[|3] / 1000), 0, 1000);
 					}
 				} else if (command == "blink") {

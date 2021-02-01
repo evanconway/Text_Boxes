@@ -2,4 +2,4 @@
 // You can write your code in this editor
 
 global.JTT_DEFAULT_TYPING_CHIRP = snd_textbox_default;
-script_text = jtt_create_box_typing(250, 200, "<blink>The<> <red pulse>quick<> <shake>brown<> <wave>fox<> <float>jumps<> over the <chromatic>lazy<> dog.");
+script_text = jtt_create_box_typing(250, 200, "<blink>The<> <red pulse:0.3>quick<> <shake>brown<> <wave>fox<> <float>jumps<> over the <chromatic>lazy<> dog.");
