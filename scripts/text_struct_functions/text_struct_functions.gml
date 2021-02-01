@@ -63,9 +63,7 @@ function JTT_Text() constructor {
 	position_offset_y = (has_fx) ? effects.position_offset_y : global.JTT_DEFAULT_OFFSET_Y;
 	
 	float_magnitude = (has_fx) ? effects.float_magnitude : global.JTT_DEFAULT_FLOAT_MAGNITUDE;
-	float_time_max = (has_fx) ? effects.float_time_max : global.JTT_DEFAULT_FLOAT_TIME;
 	float_increment = (has_fx) ? effects.float_increment : global.JTT_DEFAULT_FLOAT_INCREMENT;
-	float_time = float_time_max;
 	float_value = 0;
 	
 	wave_magnitude = (has_fx) ? effects.wave_magnitude : global.JTT_DEFAULT_WAVE_MAGNITUDE;
@@ -147,11 +145,7 @@ function JTT_Text() constructor {
 		
 		if (effect_m == TB_EFFECT_MOVE.FLOAT) {
 			draw_mod_x = 0;
-			while (float_time <= 0) {
-				float_time += float_time_max;
-				float_value += float_increment; // magic number
-			}
-			float_time -= global.TEXTBOX_DELTA_TIME / 1000;
+			float_value += float_increment;
 			draw_mod_y = floor(sin(float_value) * float_magnitude + 0.5);
 		}
 		
@@ -289,7 +283,6 @@ function jtt_text_fx_equal(a, b) {
 	if (a.position_offset_x != b.position_offset_x) return false;
 	if (a.position_offset_y != b.position_offset_y) return false;
 	if (a.float_magnitude != b.float_magnitude) return false;
-	if (a.float_time_max != b.float_time_max) return false;
 	if (a.float_increment != b.float_increment) return false;
 	if (a.wave_magnitude != b.wave_magnitude) return false;
 	if (a.wave_time_max != b.wave_time_max) return false;
