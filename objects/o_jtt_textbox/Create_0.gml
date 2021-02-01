@@ -55,9 +55,14 @@ next_page. */
 row_i_start = undefined;
 row_i_end = undefined;
 
-/// @func set_text(string)
+/// @func test
+test = function() {
+	show_debug_message("test");
+}
+
 /// @desc Set the text, effects included, of the textbox.
-function set_text(text_string) {
+/// @func set_text(string)
+set_text = function(text_string) {
 	
 	// reset typing and display values
 	cursor = 0;
@@ -190,7 +195,7 @@ function set_text(text_string) {
 
 /// @desc Set horizontal alignment of text.
 /// @func set_text_align_h(new_align_h)
-function set_text_align_h(new_align_h) {
+set_text_align_h = function(new_align_h) {
 	if (new_align_h == alignment_text_h) {
 		return;
 	}
@@ -203,7 +208,7 @@ function set_text_align_h(new_align_h) {
 
 /// @desc Set vertical alignment of text.
 /// @func set_text_align_v(new_align_v)
-function set_text_align_v(new_align_v) {
+set_text_align_v = function(new_align_v) {
 	if (new_align_v == alignment_text_v) {
 		return;
 	}
@@ -216,7 +221,7 @@ function set_text_align_v(new_align_v) {
 
 /// @desc Set horizontal alignment of box.
 /// @func set_box_align_h(new_align_h)
-function set_box_align_h(new_align_h) {
+set_box_align_h = function(new_align_h) {
 	if (new_align_h == alignment_box_h) {
 		return;
 	}
@@ -229,7 +234,7 @@ function set_box_align_h(new_align_h) {
 
 /// @desc Set vertical alignment of box.
 /// @func set_box_align_v(new_align_v)
-function set_box_align_v(new_align_v) {
+set_box_align_v = function(new_align_v) {
 	if (new_align_v == alignment_box_v) {
 		return;
 	}
@@ -242,7 +247,7 @@ function set_box_align_v(new_align_v) {
 
 /// @desc Set all alignments.
 /// @func set_alignments(box_v, box_h, text_v, text_h)
-function set_alignments(box_v, box_h, text_v, text_h) {
+set_alignments = function(box_v, box_h, text_v, text_h) {
 	set_box_align_v(box_v);
 	set_box_align_h(box_h);
 	set_text_align_v(text_v);
@@ -251,7 +256,7 @@ function set_alignments(box_v, box_h, text_v, text_h) {
 }
 
 /// @desc Return color based on command text.
-function tb_get_color(new_color) {
+tb_get_color = function(new_color) {
 	var color_change = undefined;
 	if (new_color == "no_color") color_change = effects_default.text_color;
 	else if (new_color == "aqua") color_change = c_aqua;
@@ -305,7 +310,7 @@ function tb_get_color(new_color) {
 }
 
 /// @desc Get new effects of given struct based on command_text.
-function command_apply_effects(command_text, _effects) {
+command_apply_effects = function(command_text, _effects) {
 	if (command_text == "") {
 		return effects_default;
 	}
@@ -473,7 +478,7 @@ function command_apply_effects(command_text, _effects) {
 
 /// @desc Set new display values to next displayable chunk of text.
 /// @func next_page()
-function next_page() {
+next_page = function() {
 	// Note that for scrolling, the entire text is always displayable.
 	if (ds_list_size(text) <= 0) {
 		show_error("Cannot go to next page, text not set!", true);
@@ -538,7 +543,7 @@ function next_page() {
 
 /// @desc Set textbox to next logical state
 /// @func advance()
-function advance() {
+advance = function() {
 	/* For the two display modes, typing and scrolling, there are basically 3
 	states: text set but typing/scrolling not started, typing/scrolling started
 	but not finished, and typing/scrolling finished. This detects which state
@@ -567,7 +572,7 @@ function advance() {
 
 /// @desc Return true if the whole text fits in the box.
 /// @func get_fits_onepage()
-function get_fits_onepage() {
+get_fits_onepage = function() {
 	if (row_i_start == 0 && row_i_end == (ds_list_size(text) - 1)) {
 		return true;
 	}
@@ -576,7 +581,7 @@ function get_fits_onepage() {
 
 /// @desc Return true if typing of current page complete.
 /// @func get_typing_page_finished()
-function get_typing_page_finished() {
+get_typing_page_finished = function() {
 	if (cursor_row < row_i_end) return false;
 	
 	if (cursor_row > row_i_end) {
@@ -590,7 +595,7 @@ function get_typing_page_finished() {
 
 /// @desc Return true if typing of all pages is complete.
 /// @func get_typing_all_finished()
-function get_typing_all_finished() {
+get_typing_all_finished = function() {
 	if (get_typing_page_finished() && row_i_end == ds_list_size(text) - 1) {
 		return true;
 	}
@@ -599,7 +604,7 @@ function get_typing_all_finished() {
 
 /// @desc Set typing cursor values to finished.
 /// @func set_typing_page_finished()
-function set_typing_page_finished() {
+set_typing_page_finished = function() {
 	if (ds_list_size(text) <= 0) {
 		show_error("Cannot set typing finished, text not set!", true);
 	} else {
@@ -610,7 +615,7 @@ function set_typing_page_finished() {
 
 /// @desc Set typing cursor values to start of displayable chunk
 /// @func set_typing_start()
-function set_typing_start() {
+set_typing_start = function() {
 	if (row_i_start == undefined) {
 		show_error("Cannot set typing start, next_page() not called!", true);
 	} else {
@@ -621,25 +626,25 @@ function set_typing_start() {
 
 /// @desc Return true if text at end scrolling position
 /// @func get_scrolling_finished()
-function get_scrolling_finished() {
+get_scrolling_finished = function() {
 	var end_modifier = (text_height + textbox_height - scroll_end) * -1;
 	return scroll_modifier <= end_modifier;
 }
 
 /// @desc Set scroll_modifier to end scrolling position
 /// @func set_scrolling_finished()
-function set_scrolling_finished() {
+set_scrolling_finished = function() {
 	scroll_modifier = (text_height + textbox_height - scroll_end) * -1;
 }
 
 /// @desc Set scroll_modifier back to start position
 /// @func set_scrolling_start
-function set_scrolling_start() {
+set_scrolling_start = function() {
 	scroll_modifier = 0;
 }
 
 /// @desc Determine character typing, and update char structs.
-function update() {
+update = function() {
 	textbox_delta_time();
 	
 	// typing effect
@@ -732,7 +737,7 @@ function update() {
 }
 
 /// @desc Draw the textbox, called by draw or draw_gui depending on "is_gui".
-function jtt_draw() {
+jtt_draw = function() {
 	var original_color = draw_get_color();
 	var original_alpha = draw_get_alpha();
 	var original_font = draw_get_font();
