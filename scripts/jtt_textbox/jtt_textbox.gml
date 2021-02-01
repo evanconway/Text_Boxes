@@ -663,14 +663,14 @@ function jtt_textbox() constructor{
 	/// @desc Determine character typing, and update char structs.
 	update = function() {
 		
-		textbox_delta_time();
+		//textbox_delta_time();
 		
 		// typing effect
 		/* We don't bother to check display_mode since for scrolling textboxes, 
 		the typing will automatically be set to finished. */
 		if ((row_i_start != undefined) && !get_typing_page_finished()) {
 			// run update logic until caught up
-			while (typing_time <= 0) {
+			if (typing_time <= 0) {
 				typing_time += typing_time_default;
 			
 				/* Play typing chirp sound. Notice that we check if typing_time
@@ -732,9 +732,7 @@ function jtt_textbox() constructor{
 				}
 			}
 		
-			/* Note that delta_time is the time in microseconds since the last frame. Our
-			time variables are in milliseconds. */
-			typing_time -= global.TEXTBOX_DELTA_TIME / 1000;
+			typing_time -= 1; // typing_time counts down updates
 		}
 	
 		// scrolling effect

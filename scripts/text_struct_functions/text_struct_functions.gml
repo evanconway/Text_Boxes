@@ -1,16 +1,6 @@
 global.TEXTBOX_DELTA_TIME = 0;
 global.JTT_DEBUGGING = true;
 
-function textbox_delta_time() {
-	global.TEXTBOX_DELTA_TIME = delta_time;
-	if (global.JTT_DEBUGGING) {
-		var max_time = 1000000/game_get_speed(gamespeed_fps);
-		if (global.TEXTBOX_DELTA_TIME > max_time) {
-			global.TEXTBOX_DELTA_TIME = max_time;
-		}
-	}
-}
-
 enum TB_EFFECT_MOVE {
 	OFFSET,
 	WAVE,
