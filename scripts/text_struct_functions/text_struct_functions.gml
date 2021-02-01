@@ -102,19 +102,19 @@ function JTT_Text() constructor {
 	chromatic_b = chromatic_min;
 	chromatic_state = 0;
 	
-	function add_text(new_text) {
+	add_text = function(new_text) {
 		text += new_text;
 		calculate_width = true;
 		calculate_height = true;
 	}
 	
-	function set_text(new_text) {
+	set_text = function(new_text) {
 		text = new_text;
 		calculate_width = true;
 		calculate_height = true;
 	}
 	
-	function get_width() {
+	get_width = function() {
 		if (calculate_width) {
 			draw_set_font(font);
 			width = string_width(text);
@@ -123,7 +123,7 @@ function JTT_Text() constructor {
 		return width;
 	}
 	
-	function get_height() {
+	get_height = function() {
 		if (calculate_height) {
 			draw_set_font(font);
 			height = string_height(text);
@@ -132,7 +132,7 @@ function JTT_Text() constructor {
 		return height;
 	}
 	
-	function update() {
+	update = function() {
 		
 		// movement effects
 		if (effect_m == TB_EFFECT_MOVE.NONE) {

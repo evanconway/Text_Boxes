@@ -20,7 +20,7 @@ global.JTT_DEFAULT_SHAKE_MAGNITUDE = 0;
 global.JTT_DEFAULT_SHAKE_TIME = 400;
 */
 
-text = jtt_create_box_scrolling(gui_w_c, gui_h_c, 600, 400);
+text = jtt_create_box_scrolling(600, 400);
 
 greeting = "<wave>Hello!<><n><n> Welcome to <blink>\"Just<> The Text\"!<n><n> Just <wshake:2,100>The<> <green>Text<> is a textbox system that supports numerous effects such as <chromatic>color change<>, <pulse>pulsing<>, typing, and scrolling.";
 
