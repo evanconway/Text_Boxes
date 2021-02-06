@@ -94,7 +94,7 @@ function jtt_textbox() constructor{
 				if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
 				var command_text = string_copy(text_string, index + 1, end_i - index - 1);
 				
-				var test_command_parsing = parse_command_text(command_text);
+				var _command_arr = parse_command_text(command_text);
 			
 				/* Most commands deal with text effects, but there are a few that deal with text
 				formatting. We parse those here. These need to be typed much more strictly because,
@@ -121,7 +121,8 @@ function jtt_textbox() constructor{
 					}
 				}
 			
-				effects = command_apply_effects(command_text, effects);
+				effects = command_apply_effects(_command_arr, effects);
+				//effects = command_apply_effects(command_text, effects);
 			} else {
 			
 				/* We only parse up to the start of the next tag, or the end of the text_string.
@@ -355,6 +356,7 @@ function jtt_textbox() constructor{
 			var _command = "";
 			var c = 1;
 			while (string_char_at(_command_text, c) != ":" && c <= string_length(_command_text)) {
+				_command = string_lower(_command); // set to lower case to ensure correct matching later
 				_command += string_char_at(_command_text, c);
 				c++;
 			}
@@ -393,186 +395,171 @@ function jtt_textbox() constructor{
 		return _commands;
 	}
 
-	/// @desc Get new effects of given struct based on command_text.
-	command_apply_effects = function(command_text, _effects) {
-		if (command_text == "") {
+	/// @desc Get new effects of given struct based on _command_arr.
+	command_apply_effects = function(_command_arr, _effects) {
+		/*
+		If the command array is empty, we reset the effects. Note
+		that this is a design choice, and not a logical reminder. This
+		makes resetting effects in a string very easy. Just type <>
+		*/
+		if (array_length(_command_arr) <= 0) {
 			return effects_default;
 		}
+		
+		// If that's not the case, continue with creating effects.
+		
+		/*
+		In order to only change effects marked in commands, we create a new text
+		struct by passing in the current effects to copy them.
+		*/
 		var new_effects = new JTT_Text("", _effects);
-		var command = "";
-		for (var i = 1; i <= string_length(command_text); i++) {
-			var c = string_char_at(command_text, i);
-			if (i == string_length(command_text)) command += c;
-			if (c == " " || i == string_length(command_text)) {
-				command = string_lower(command);
-				/* At this point, the "command" string could also include any parameters. The start of 
-				parameters is indicated with a colon, and each parameter is separated by a comma. These 
-				must be parsed out. */
-				var param_i = string_pos(":", command);
-				var params = ds_list_create();
-				if (param_i > 0) {
-					// colon found, parse parameters
-					var parameter = "";
-					for (var k = param_i + 1; k <= string_length(command); k++) {
-						var c = string_char_at(command, k);
-						if (k == string_length(command)) parameter += c;
-						if ((c == ",") || (k == string_length(command))) {
-							// Parameter complete add to params list.
-							ds_list_add(params, parameter);
-							parameter = "";
-						} else {
-							parameter += c;
-						}
-					}
-					command = string_copy(command, 1, param_i - 1);
+		
+		// Now we can iterate though each command and arguments, and apply them to the effects struct.
+		for (var i = 0; i < array_length(_command_arr); i++) {
+			var _command = _command_arr[i].command;
+			var _args = _command_arr[i].parameters; // I think these are technically arguments?
+			
+			// color commands
+			var new_color = tb_get_color(_command);
+			if (new_color != undefined) new_effects.text_color = new_color;
+			
+			// first parse commands that use string arguments:
+			
+			// font
+			if (_command == "f") {
+				// attemp to set new font
+				var new_font = asset_get_index(_args[0]);
+				if ((new_font >= 0) && (asset_get_type(_args[0]) == asset_font)) {
+					new_effects.font = new_font;
 				}
+			}
 			
-				var new_color = tb_get_color(command);
-				if (new_color != undefined) new_effects.text_color = new_color;
-			
-				// first parse commands that need string parameters:
-			
-				// font
-				if (command == "f") {
-					// attemp to set new font
-					var new_font = asset_get_index(params[|0]);
-					if ((new_font >= 0) && (asset_get_type(params[|0]) == asset_font)) {
-						new_effects.font = new_font;
-					}
-				}
-			
-				// now convert parameters array into numbers, and parse the rest
-				for (var p = 0; p < ds_list_size(params); p++) {
-					/* 
-					A key parameter is "nc" or "no change". This will fill the slot of a
-					parameter list, but make no changes. Useful for when you only want to
-					change the second parameter in an effect. If the parameter is "nc", we
-					skip over it
+			// From here on, all commands only use real numbers for arguments. We'll convert them now.
+			for (var p = 0; p < array_length(_args); p++) {
+				/* 
+				A key parameter value is "nc" or "no change". This will fill the slot of an
+				argument list, but make no changes. Useful for when you only want to
+				change the second parameter in an effect. If the parameter is "nc", we
+				skip over it
+				*/
+				if (_args[p] == "nc") {
+					_args[p] = undefined;
+				} else {
+					/*
+					Here we'll attempt to convert the parameter to a number. If we can't,
+					The user has given improper input, and we'll throw an error.
 					*/
-					
-					if (params[|p] == "nc") {
-						params[|p] = undefined;
-					} else {
-						/*
-						Here we'll attempt to convert the parameter to a number. If we can't,
-						The user has given improper input, and we'll throw an error.
-						*/
-						try {
-							params[|p] = real(params[|p]);
-						} catch (err) {
-							show_debug_message(err);
-							show_error("JTT Error: Text effect param (" + string(params[|p] + ") is not a real number!"), true);
-						}
+					try {
+						_args[p] = real(_args[p]);
+					} catch (err) {
+						show_debug_message(err);
+						show_error("JTT Error: Text effect param (" + string(_args[p] + ") is not a real number!"), true);
 					}
 				}
+			}
 			
-				// movement effects
-				if (command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
-				else if (command == "offset") {
-					new_effects.effect_m = TB_EFFECT_MOVE.OFFSET;
-					var new_offset_x = 0;
-					if (params[|0] != undefined) { // x left
-						new_offset_x += (params[|0] * -1);
-					}
-					if (params[|1] != undefined) { // x right
-						new_offset_x += params[|1];
-					}
-					var new_offset_y = 0;
-					if (params[|2] != undefined) { // y up
-						new_offset_y += (params[|2] * -1);
-					}
-					if (params[|3] != undefined) { // y down
-						new_offset_y += params[|3];
-					}
-					new_effects.position_offset_x = new_offset_x;
-					new_effects.position_offset_y = new_offset_y;
-				} else if (command == "wave") {
-					new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
-					if (params[|0] != undefined) {
-						new_effects.wave_magnitude = clamp(params[|0], 0, 10000);
-					}
-					if (params[|1] != undefined) {
-						new_effects.wave_increment = clamp(params[|1], 0, 10000);
-					}
-					if (params[|2] != undefined) {
-						new_effects.wave_offset = clamp((params[|2]), 0, 2 * pi);
-					}
-				} else if (command == "float") {
-					new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
-					if (params[|0] != undefined) {
-						new_effects.float_magnitude = clamp(params[|0], 0, 10000);
-					}
-					if (params[|1] != undefined) {
-						new_effects.float_increment = clamp((params[|1]), 0, 2 * pi);
-					}
-				} else if (command == "shake") {
-					new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
-					if (params[|0] != undefined) {
-						new_effects.shake_magnitude = clamp(params[|0], 0, 10000);
-					}
-					if (params[|1] != undefined) {
-						new_effects.shake_time_max = clamp(params[|1], 0, 10000);
-					}
-				} else if (command == "wshake") {
-					new_effects.effect_m = TB_EFFECT_MOVE.WSHAKE;
-					if (params[|0] != undefined) {
-						new_effects.shake_magnitude = clamp(params[|0], 0, 10000);
-					}
-					if (params[|1] != undefined) {
-						new_effects.shake_time_max = clamp(params[|1], 0, 10000);
-					}
+			// movement effects
+			if (_command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
+			else if (_command == "offset") {
+				new_effects.effect_m = TB_EFFECT_MOVE.OFFSET;
+				var new_offset_x = 0;
+				if (array_length(_args) >= 1) { // x left
+					new_offset_x += (_args[0] * -1);
 				}
-			
-				// alpha effects
-				if (command == "no_alpha") new_effects.effect_a = TB_EFFECT_ALPHA.NONE;
-				else if (command == "pulse") {
-					new_effects.effect_a = TB_EFFECT_ALPHA.PULSE;
-					if (params[|0] != undefined) {
-						new_effects.pulse_alpha_max = clamp((params[|0]), 0, 1);
-					}
-					if (params[|1] != undefined) {
-						new_effects.pulse_alpha_min = clamp((params[|1]), 0, new_effects.pulse_alpha_max);
-					}
-					if (params[|2] != undefined) {
-						new_effects.pulse_increment = clamp((params[|2]), 0, 1);
-					}
-				} else if (command == "blink") {
-					new_effects.effect_a = TB_EFFECT_ALPHA.BLINK;
-					if (params[|0] != undefined) {
-						new_effects.blink_alpha_on = clamp((params[|0]), 0, 1);
-					}
-					if (params[|1] != undefined) {
-						new_effects.blink_alpha_off = clamp((params[|1]), 0, 1);
-					}
-					if (params[|2] != undefined) {
-						new_effects.blink_time_on = params[|2];
-					}
-					if (params[|3] != undefined) {
-						new_effects.blink_time_off = params[|3];
-					}
+				if (array_length(_args) >= 2) { // x right
+					new_offset_x += _args[1];
 				}
-			
-				// color effects
-				if (command == "no_color") new_effects.effect_c = TB_EFFECT_COLOR.NONE;
-				else if (command == "chromatic") {
-					new_effects.effect_c = TB_EFFECT_COLOR.CHROMATIC;
-					if (params[|0] != undefined) {
-						new_effects.chromatic_max = clamp(params[|0], 0, 255);
-					}
-					if (params[|1] != undefined) {
-						new_effects.chromatic_min = clamp(params[|1], 0, 255);
-					}
-					if (params[|2] != undefined) {
-						new_effects.chromatic_increment = params[|2];
-					}
+				var new_offset_y = 0;
+				if (array_length(_args) >= 3) { // y up
+					new_offset_y += (_args[2] * -1);
 				}
+				if (array_length(_args) >= 4) { // y down
+					new_offset_y += _args[3];
+				}
+				new_effects.position_offset_x = new_offset_x;
+				new_effects.position_offset_y = new_offset_y;
+			} else if (_command == "wave") {
+				new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
+				if (array_length(_args) >= 1) {
+					new_effects.wave_magnitude = clamp(_args[0], 0, 10000);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.wave_increment = clamp(_args[1], 0, 10000);
+				}
+				if (array_length(_args) >= 3) {
+					new_effects.wave_offset = clamp((_args[2]), 0, 2 * pi);
+				}
+			} else if (_command == "float") {
+				new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
+				if (array_length(_args) >= 1) {
+					new_effects.float_magnitude = clamp(_args[0], 0, 10000);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.float_increment = clamp((_args[1]), 0, 2 * pi);
+				}
+			} else if (_command == "shake") {
+				new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
+				if (array_length(_args) >= 1) {
+					new_effects.shake_magnitude = clamp(_args[0], 0, 10000);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.shake_time_max = clamp(_args[1], 0, 10000);
+				}
+			} else if (_command == "wshake") {
+				new_effects.effect_m = TB_EFFECT_MOVE.WSHAKE;
+				if (array_length(_args) >= 1) {
+					new_effects.shake_magnitude = clamp(_args[0], 0, 10000);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.shake_time_max = clamp(_args[1], 0, 10000);
+				}
+			}
 			
-				ds_list_destroy(params);
-				command = "";
-			} else {
-				command += c;
+			// alpha effects
+			if (_command == "no_alpha") new_effects.effect_a = TB_EFFECT_ALPHA.NONE;
+			else if (_command == "pulse") {
+				new_effects.effect_a = TB_EFFECT_ALPHA.PULSE;
+				if (array_length(_args) >= 1) {
+					new_effects.pulse_alpha_max = clamp((_args[0]), 0, 1);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.pulse_alpha_min = clamp((_args[1]), 0, new_effects.pulse_alpha_max);
+				}
+				if (array_length(_args) >= 3) {
+					new_effects.pulse_increment = clamp((_args[2]), 0, 1);
+				}
+			} else if (_command == "blink") {
+				new_effects.effect_a = TB_EFFECT_ALPHA.BLINK;
+				if (array_length(_args) >= 1) {
+					new_effects.blink_alpha_on = clamp((_args[0]), 0, 1);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.blink_alpha_off = clamp((_args[1]), 0, 1);
+				}
+				if (array_length(_args) >= 3) {
+					new_effects.blink_time_on = _args[2];
+				}
+				if (array_length(_args) >= 4) {
+					new_effects.blink_time_off = _args[3];
+				}
+			}
+			
+			// color effects
+			if (_command == "no_color") new_effects.effect_c = TB_EFFECT_COLOR.NONE;
+			else if (_command == "chromatic") {
+				new_effects.effect_c = TB_EFFECT_COLOR.CHROMATIC;
+				if (array_length(_args) >= 1) {
+					new_effects.chromatic_max = clamp(_args[0], 0, 255);
+				}
+				if (array_length(_args) >= 2) {
+					new_effects.chromatic_min = clamp(_args[1], 0, 255);
+				}
+				if (array_length(_args) >= 3) {
+					new_effects.chromatic_increment = _args[2];
+				}
 			}
 		}
+	
 		return new_effects;
 	}
 
