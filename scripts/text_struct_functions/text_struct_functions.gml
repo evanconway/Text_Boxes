@@ -118,8 +118,12 @@ function JTT_Text() constructor {
 	
 	get_height = function() {
 		if (calculate_height) {
-			draw_set_font(font);
-			height = string_height(text);
+			if (sprite == undefined) {
+				draw_set_font(font);
+				height = string_height(text);
+			} else {
+				height = sprite_get_height(sprite);
+			}
 			calculate_height = false;
 		}
 		return height;
