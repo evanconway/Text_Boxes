@@ -105,11 +105,11 @@ function JTT_Text() constructor {
 	
 	get_width = function() {
 		if (calculate_width) {
-			is (sprite == undefined) {
+			if (sprite == undefined) {
 				draw_set_font(font);
 				width = string_width(text);
 			} else {
-				
+				width = sprite_get_width(sprite);
 			}
 			calculate_width = false;
 		}
