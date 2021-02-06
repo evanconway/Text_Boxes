@@ -93,6 +93,8 @@ function jtt_textbox() constructor{
 				end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
 				if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
 				var command_text = string_copy(text_string, index + 1, end_i - index - 1);
+				
+				var test_command_parsing = parse_command_text(command_text);
 			
 				/* Most commands deal with text effects, but there are a few that deal with text
 				formatting. We parse those here. These need to be typed much more strictly because,
@@ -309,6 +311,86 @@ function jtt_textbox() constructor{
 			}
 		}
 		return color_change;
+	}
+
+	/// @desc Return array of effects and their arguments.
+	parse_command_text = function(all_command_text) {
+		/*
+		Note that this parsing code is not optimal, but the way we're doing it makes it
+		easier for ourselves to understand.
+		*/
+		
+		/* 
+		First we split the text up into individual commands, and put them in an array.
+		Commands are separated by spaces.
+		*/
+		var _commands = [];
+		var _command = "";
+		for (var i = 1; i <= string_length(all_command_text); i++) {
+			var c = string_char_at(all_command_text, i);
+			if (c != " ") {
+				_command += c;
+			} else {
+				/*
+				We only add a command text to our array if it's not empty.
+				If we do, reset command.
+				*/
+				if (_command != "") {
+					array_push(_commands, _command);
+					_command = ""
+				}
+			}
+		}
+		// add final command
+		if (_command != "") array_push(_commands, _command);
+		
+		/*
+		Now that we have an array of separated texts, we need to separate the commands themselves
+		from the parameters of these commands. We'll replace the text in each slot in the array
+		with a struct containing the command itself, and the parameters.
+		*/
+		for (var i = 0; i < array_length(_commands); i++) {
+			// split out command
+			var _command_text = _commands[i];
+			var _command = "";
+			var c = 1;
+			while (string_char_at(_command_text, c) != ":" && c <= string_length(_command_text)) {
+				_command += string_char_at(_command_text, c);
+				c++;
+			}
+			
+			/*
+			Here, c will be at the location of the colon in the command text, if it exists. Otherwise
+			it will be beyond the length of the string. Therefore we can just begin parsing out parameters
+			by checking for length of string instead of worrying about whether the current character is
+			a colon. But remember since c is AT the location of the colon, we must increase it one place.
+			*/
+			c++;
+			var _parameters = [];
+			var _param = "";
+			while (c <= string_length(_command_text)) {
+				if (string_char_at(_command_text, c) != ",") {
+					_param += string_char_at(_command_text, c);
+				} else {
+					array_push(_parameters, _param);
+					_param = "";
+				}
+				c++;
+			}
+			// add final parameter
+			if (_param != "") array_push(_parameters, _param);
+			
+			/*
+			Now we have the command by itself as a string, and the parameters split into an array.
+			These values can now replace the original string in the commands array.
+			*/
+			_commands[i] = {
+				command: _command,
+				parameters: _parameters
+			}
+		}
+		
+		return _commands;
 	}
 
 	/// @desc Get new effects of given struct based on command_text.
