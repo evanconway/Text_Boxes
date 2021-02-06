@@ -95,31 +95,57 @@ function jtt_textbox() constructor{
 				var command_text = string_copy(text_string, index + 1, end_i - index - 1);
 				
 				var _command_arr = parse_command_text(command_text);
+				
+				/*
+				Most commands deal with text effects, but there are some that deal with formatting, or
+				changing the lines themselves. We have to do those here, instead of in the apply effects
+				function because have access to our line data here.
+				*/
+				
+				for (var i = 0; i < array_length(_command_arr); i++) {
+					var _command = _command_arr[i].command;
+					var _args = _command_arr[i].parameters;
+					
+					// New line, or line break.
+					if (_command == "n") {
+						var word_width = text_list_width(word);
+						if ((ds_list_size(line) <= 0) && (ds_list_size(word) <= 0)) {
+							text_list_add(line, " ", effects, index);
+							ds_list_add(text, line);
+							line = ds_list_create();
+						} else if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+							line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
+							ds_list_add(text, line);
+							text_height += text_list_height(line); // scrolling requies whole text height
+							line = word;
+							word = ds_list_create();
+						} else {
+							line_add_word(line, word);
+							line_remove_bookend_spaces(line);
+							ds_list_add(text, line)
+							line = ds_list_create();
+							word = ds_list_create();
+						}
+					}
+					
+					// Sprite
+					if (_command == "sprite") {
+						var _sprite = asset_get_index(_args[0])
+						if (_sprite < 0 || asset_get_type(_args[0]) != asset_sprite) {
+							show_error("JTT effect error. There is no sprite with name \"" + _args[0] + "\"", true);
+						}
+						var _sprite_struct = JTT_Text("", effects);
+						_sprite_struct.sprite = _sprite;
+						
+						// Add the sprite struct to the lines, accounting for line wrapping.
+						
+					}
+				}
 			
 				/* Most commands deal with text effects, but there are a few that deal with text
 				formatting. We parse those here. These need to be typed much more strictly because,
 				frankly, I'm sick of writing parsing code. */
-				if (command_text == "n") {
-					/* New line, or line break */
-					var word_width = text_list_width(word);
-					if ((ds_list_size(line) <= 0) && (ds_list_size(word) <= 0)) {
-						text_list_add(line, " ", effects, index);
-						ds_list_add(text, line);
-						line = ds_list_create();
-					} else if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
-						line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
-						ds_list_add(text, line);
-						text_height += text_list_height(line); // scrolling requies whole text height
-						line = word;
-						word = ds_list_create();
-					} else {
-						line_add_word(line, word);
-						line_remove_bookend_spaces(line);
-						ds_list_add(text, line)
-						line = ds_list_create();
-						word = ds_list_create();
-					}
-				}
+				
 			
 				effects = command_apply_effects(_command_arr, effects);
 				//effects = command_apply_effects(command_text, effects);
@@ -888,7 +914,7 @@ function jtt_textbox() constructor{
 		
 				var _cursor_char = floor(cursor);
 		
-				// Draw each struct in the row. 
+				// Iterate over each struct in the row to prepare for draw. 
 				for (var istruct = 0; istruct < row_size; istruct++) {
 					var text_struct = text[|irow][|istruct];
 					draw_set_font(text_struct.font);

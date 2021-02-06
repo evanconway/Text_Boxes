@@ -46,6 +46,14 @@ function JTT_Text() constructor {
 	effect_c = (has_fx) ? effects.effect_c : global.JTT_DEFAULT_EFFECT_COLOR;
 	alpha = 1;
 	
+	/*
+	Although we're calling these "text" structs, they have the ability to display sprites.
+	If this value is filled, the struct will draw a sprite here instead of text. The width 
+	and height functions have to account for the width/height of the sprite instead of the
+	text if this variable is filled.
+	*/
+	sprite = undefined;
+	
 	// movement effects
 	position_offset_x = (has_fx) ? effects.position_offset_x : global.JTT_DEFAULT_OFFSET_X;
 	position_offset_y = (has_fx) ? effects.position_offset_y : global.JTT_DEFAULT_OFFSET_Y;
@@ -97,8 +105,12 @@ function JTT_Text() constructor {
 	
 	get_width = function() {
 		if (calculate_width) {
-			draw_set_font(font);
-			width = string_width(text);
+			is (sprite == undefined) {
+				draw_set_font(font);
+				width = string_width(text);
+			} else {
+				
+			}
 			calculate_width = false;
 		}
 		return width;
