@@ -95,6 +95,8 @@ function jtt_textbox() constructor {
 				
 				var _command_arr = parse_command_text(command_text);
 				
+				effects = command_apply_effects(_command_arr, effects);
+				
 				/*
 				Most commands deal with text effects, but there are some that deal with formatting, or
 				changing the lines themselves. We have to do those here, instead of in the apply effects
@@ -151,6 +153,14 @@ function jtt_textbox() constructor {
 						var _sprite_struct = new JTT_Text("$", effects);
 						_sprite_struct.sprite = _sprite;
 						
+						/* sprite arguments */
+						if (array_length(_args) > 1) {
+							try {
+								_sprite_struct.sprite_scale = real(_args[1]);
+							} catch (err) {
+								show_error("JTT error. Sprite cannot have non-numerical scale value.", true);
+							}
+						}
 						
 						/* Recall that we're going to treate this sprite like a word. So to imitate the behavior of text
 						words, we have to wrap this sprite struct in a ds_list.*/
@@ -163,9 +173,6 @@ function jtt_textbox() constructor {
 						line = new_word_line.line;
 					}
 				}
-				
-				effects = command_apply_effects(_command_arr, effects);
-				//effects = command_apply_effects(command_text, effects);
 			} else {
 				
 				/* Recall that at this point in the code, we're inside a loop attempting to parse text. Our
@@ -570,54 +577,54 @@ function jtt_textbox() constructor {
 				new_effects.effect_m = TB_EFFECT_MOVE.OFFSET;
 				var new_offset_x = 0;
 				if (array_length(_args) >= 1) { // x left
-					new_offset_x += (_args[0] * -1);
+					if (_args[0] != undefined) new_offset_x += (_args[0] * -1);
 				}
 				if (array_length(_args) >= 2) { // x right
-					new_offset_x += _args[1];
+					if (_args[1] != undefined) new_offset_x += _args[1];
 				}
 				var new_offset_y = 0;
 				if (array_length(_args) >= 3) { // y up
-					new_offset_y += (_args[2] * -1);
+					if (_args[2] != undefined) new_offset_y += (_args[2] * -1);
 				}
 				if (array_length(_args) >= 4) { // y down
-					new_offset_y += _args[3];
+					if (_args[3] != undefined) new_offset_y += _args[3];
 				}
 				new_effects.position_offset_x = new_offset_x;
 				new_effects.position_offset_y = new_offset_y;
 			} else if (_command == "wave") {
 				new_effects.effect_m = TB_EFFECT_MOVE.WAVE;
 				if (array_length(_args) >= 1) {
-					new_effects.wave_magnitude = clamp(_args[0], 0, 10000);
+					if (_args[0] != undefined) new_effects.wave_magnitude = clamp(_args[0], 0, 10000);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.wave_increment = clamp(_args[1], 0, 10000);
+					if (_args[1] != undefined) new_effects.wave_increment = clamp(_args[1], 0, 10000);
 				}
 				if (array_length(_args) >= 3) {
-					new_effects.wave_offset = clamp((_args[2]), 0, 2 * pi);
+					if (_args[2] != undefined) new_effects.wave_offset = clamp((_args[2]), 0, 2 * pi);
 				}
 			} else if (_command == "float") {
 				new_effects.effect_m = TB_EFFECT_MOVE.FLOAT;
 				if (array_length(_args) >= 1) {
-					new_effects.float_magnitude = clamp(_args[0], 0, 10000);
+					if (_args[0] != undefined) new_effects.float_magnitude = clamp(_args[0], 0, 10000);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.float_increment = clamp((_args[1]), 0, 2 * pi);
+					if (_args[1] != undefined) new_effects.float_increment = clamp((_args[1]), 0, 2 * pi);
 				}
 			} else if (_command == "shake") {
 				new_effects.effect_m = TB_EFFECT_MOVE.SHAKE;
 				if (array_length(_args) >= 1) {
-					new_effects.shake_magnitude = clamp(_args[0], 0, 10000);
+					if (_args[0] != undefined) new_effects.shake_magnitude = clamp(_args[0], 0, 10000);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.shake_time_max = clamp(_args[1], 0, 10000);
+					if (_args[1] != undefined) new_effects.shake_time_max = clamp(_args[1], 0, 10000);
 				}
 			} else if (_command == "wshake") {
 				new_effects.effect_m = TB_EFFECT_MOVE.WSHAKE;
 				if (array_length(_args) >= 1) {
-					new_effects.shake_magnitude = clamp(_args[0], 0, 10000);
+					if (_args[0] != undefined) new_effects.shake_magnitude = clamp(_args[0], 0, 10000);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.shake_time_max = clamp(_args[1], 0, 10000);
+					if (_args[1] != undefined) new_effects.shake_time_max = clamp(_args[1], 0, 10000);
 				}
 			}
 			
@@ -626,27 +633,27 @@ function jtt_textbox() constructor {
 			else if (_command == "pulse") {
 				new_effects.effect_a = TB_EFFECT_ALPHA.PULSE;
 				if (array_length(_args) >= 1) {
-					new_effects.pulse_alpha_max = clamp((_args[0]), 0, 1);
+					if (_args[0] != undefined) new_effects.pulse_alpha_max = clamp((_args[0]), 0, 1);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.pulse_alpha_min = clamp((_args[1]), 0, new_effects.pulse_alpha_max);
+					if (_args[1] != undefined) new_effects.pulse_alpha_min = clamp((_args[1]), 0, new_effects.pulse_alpha_max);
 				}
 				if (array_length(_args) >= 3) {
-					new_effects.pulse_increment = clamp((_args[2]), 0, 1);
+					if (_args[2] != undefined) new_effects.pulse_increment = clamp((_args[2]), 0, 1);
 				}
 			} else if (_command == "blink") {
 				new_effects.effect_a = TB_EFFECT_ALPHA.BLINK;
 				if (array_length(_args) >= 1) {
-					new_effects.blink_alpha_on = clamp((_args[0]), 0, 1);
+					if (_args[0] != undefined) new_effects.blink_alpha_on = clamp((_args[0]), 0, 1);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.blink_alpha_off = clamp((_args[1]), 0, 1);
+					if (_args[1] != undefined) new_effects.blink_alpha_off = clamp((_args[1]), 0, 1);
 				}
 				if (array_length(_args) >= 3) {
-					new_effects.blink_time_on = _args[2];
+					if (_args[2] != undefined) new_effects.blink_time_on = _args[2];
 				}
 				if (array_length(_args) >= 4) {
-					new_effects.blink_time_off = _args[3];
+					if (_args[3] != undefined) new_effects.blink_time_off = _args[3];
 				}
 			}
 			
@@ -655,13 +662,13 @@ function jtt_textbox() constructor {
 			else if (_command == "chromatic") {
 				new_effects.effect_c = TB_EFFECT_COLOR.CHROMATIC;
 				if (array_length(_args) >= 1) {
-					new_effects.chromatic_max = clamp(_args[0], 0, 255);
+					if (_args[0] != undefined) new_effects.chromatic_max = clamp(_args[0], 0, 255);
 				}
 				if (array_length(_args) >= 2) {
-					new_effects.chromatic_min = clamp(_args[1], 0, 255);
+					if (_args[1] != undefined) new_effects.chromatic_min = clamp(_args[1], 0, 255);
 				}
 				if (array_length(_args) >= 3) {
-					new_effects.chromatic_increment = _args[2];
+					if (_args[2] != undefined) new_effects.chromatic_increment = _args[2];
 				}
 			}
 		}

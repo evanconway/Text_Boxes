@@ -110,7 +110,7 @@ function JTT_Text() constructor {
 				draw_set_font(font);
 				width = string_width(text);
 			} else {
-				width = sprite_get_width(sprite);
+				width = sprite_get_width(sprite) * sprite_scale;
 			}
 			calculate_width = false;
 		}
@@ -123,7 +123,7 @@ function JTT_Text() constructor {
 				draw_set_font(font);
 				height = string_height(text);
 			} else {
-				height = sprite_get_height(sprite);
+				height = sprite_get_height(sprite) * sprite_scale;
 			}
 			calculate_height = false;
 		}
@@ -283,7 +283,8 @@ function JTT_Text() constructor {
 		if (sprite == undefined) {
 			draw_text(x, y, _draw_text);
 		} else {
-			draw_sprite(sprite, 0, x, y);
+			draw_sprite_ext(sprite, 0, x, y, sprite_scale, sprite_scale, 0, -1, alpha * alpha_mod);
+			//draw_sprite(sprite, 0, x, y);
 		}
 		
 		draw_set_color(original_color);
