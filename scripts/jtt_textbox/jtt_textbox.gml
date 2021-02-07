@@ -1,5 +1,4 @@
-// Script assets have changed for v2.3.0 see
-// https://help.yoyogames.com/hc/en-us/articles/360005277377 for more information
+
 function jtt_textbox() constructor {
 	text = ds_list_create(); // ds_list of ds_list of text structs (2d list)
 	text_original_string = undefined; // keep original string of set text
@@ -232,12 +231,18 @@ function jtt_textbox() constructor {
 				/* Now we can determine if we add a word to the current line. If we found a space, or we reached the end 
 				of the string, then we can add a word to the current line. This is also where we determine line breaks. */
 				if (space_found || end_of_string) {
+					
+					var new_line_word = text_add_word(word, line, space_found, index, effects);
+					word = new_line_word.word;
+					line = new_line_word.line;
+					
+					/*
 					// determine line break
 					if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
 						/*
 						If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
 						We throw an error to force the user to change something, because our code cannot accomodate this.
-						*/
+						//
 						if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
 					
 						line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
@@ -251,6 +256,7 @@ function jtt_textbox() constructor {
 						if (space_found) text_list_add(line, " ", effects, index);
 						ds_list_clear(word);
 					}
+					*/
 				}
 			}
 			index = end_i + 1;
@@ -270,6 +276,42 @@ function jtt_textbox() constructor {
 		if (textbox_width == undefined) {
 			textbox_width = text_list_width(text[|0]);
 			textbox_height = text_list_height(text[|0]);
+		}
+	}
+	
+	/*
+	Add given word, and line, to the text. Returns new values for each. 
+	This function can only be called from "set_text". index and effects are only 
+	required if space_found is included. */
+	/// @func text_add_word(word, line, *space_found, *index, *effects)
+	text_add_word = function(_word, _line) {
+		var _space_found = (argument_count > 2) ? argument[2] : false;
+		var _index = (argument_count > 3) ? argument[3] : 0;
+		var _effects = (argument_count > 4) ? argument[4] : undefined;
+		var _word_width = text_list_width(_word); // note that space is added after
+		
+		if ((textbox_width != undefined) && ((text_list_width(_line) + _word_width) > textbox_width)) {
+			/*
+			If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
+			We throw an error to force the user to change something, because our code cannot accomodate this.
+			*/
+			if (ds_list_size(_line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(_word), true);
+					
+			line_remove_bookend_spaces(_line); // so lines neither start nor end with spaces, makes align easy
+			ds_list_add(text, _line);
+			text_height += text_list_height(_line); // scrolling requies whole text height
+			_line = _word;
+			if (_space_found) text_list_add(_line, " ", _effects, _index);
+			_word = ds_list_create();
+		} else {
+			line_add_word(_line, _word);
+			if (_space_found) text_list_add(_line, " ", _effects, _index);
+			ds_list_clear(_word);
+		}
+		
+		return {
+			line: _line,
+			word: _word
 		}
 	}
 	
@@ -342,11 +384,13 @@ function jtt_textbox() constructor {
 		else if (new_color == "aqua") color_change = c_aqua;
 		else if (new_color == "black") color_change = c_black;
 		else if (new_color == "blue") color_change = c_blue;
+		else if (new_color == "ltblue") color_change = make_color_rgb(0, 191, 255);
 		else if (new_color == "brown") color_change = make_color_rgb(102, 51, 0);
 		else if (new_color == "dkgray") color_change = c_dkgray;
 		else if (new_color == "fuchsia") color_change = c_fuchsia;
 		else if (new_color == "pink") color_change = make_color_rgb(255, 105, 180);
 		else if (new_color == "gray") color_change = c_gray;
+		else if (new_color == "grey") color_change = c_gray;
 		else if (new_color == "green") color_change = c_green;
 		else if (new_color == "lime") color_change = c_lime;
 		else if (new_color == "ltgray") color_change = c_ltgray;
