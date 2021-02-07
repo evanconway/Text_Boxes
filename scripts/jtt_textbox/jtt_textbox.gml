@@ -108,10 +108,9 @@ function jtt_textbox() constructor {
 					// New line, or line break.
 					if (_command == "n") {
 						var word_width = text_list_width(word);
-						/*
-						The first if statement in this code may be wrong. I'm not sure there's ever a situation where
-						
-						*/
+						/* It's been a while since I've looked at this, but I'm pretty sure the first if statement only 
+						exists in case the user uses the line break command multiple times in a row. That is the only 
+						situation in which the line and word will be empty. */
 						if ((ds_list_size(line) <= 0) && (ds_list_size(word) <= 0)) {
 							text_list_add(line, " ", effects, index); // Wait, why do we add a space? Double check this.
 							ds_list_add(text, line);
@@ -133,40 +132,35 @@ function jtt_textbox() constructor {
 					
 					// Sprite
 					if (_command == "sprite") {
+						
+						// First, ensure that given sprite argument is valid.
 						var _sprite = asset_get_index(_args[0]);
 						if (_sprite < 0 || asset_get_type(_args[0]) != asset_sprite) {
 							show_error("JTT effect error. There is no sprite with name \"" + _args[0] + "\"", true);
 						}
-						var _sprite_struct = JTT_Text("", effects);
+						
+						/* For the sake of simplicity, we'll always treat sprites as entire words by themselves. So 
+						to add this to the text lists, we have to first add the existing word to the text list. To do 
+						that, we basically pretend like we've encountered a finished word. */
+						var new_word_line = text_add_word(word, line);
+						word = new_word_line.word;
+						line = new_word_line.line;
+						
+						// Now we create a new text struct that contains only the sprite.
+						// The text must be a single character to avoid typing effect problems. 
+						var _sprite_struct = new JTT_Text("$", effects);
 						_sprite_struct.sprite = _sprite;
 						
-						/*
-						Here we add the sprite struct to the 2D list of structs. For the sake of simplicity, we'll
-						always treat sprites as entire words by themselves. So to add this to the text lists, we 
-						have to first add the existing word to the text list. 
-						*/
 						
-						/*
-						if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
-							/*
-							If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
-							We throw an error to force the user to change something, because our code cannot accomodate this.
-	
-							if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
-					
-							line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
-							ds_list_add(text, line);
-							text_height += text_list_height(line); // scrolling requies whole text height
-							line = word;
-							if (space_found) text_list_add(line, " ", effects, index);
-							word = ds_list_create();
-						} else {
-							line_add_word(line, word);
-							if (space_found) text_list_add(line, " ", effects, index);
-							ds_list_clear(word);
-						}
-						*/
+						/* Recall that we're going to treate this sprite like a word. So to imitate the behavior of text
+						words, we have to wrap this sprite struct in a ds_list.*/
+						var _sprite_word = ds_list_create();
+						ds_list_add(_sprite_word, _sprite_struct);
 						
+						// Finally, we can add this word to the text like it's a regular word.
+						new_word_line = text_add_word(_sprite_word, line);
+						word = new_word_line.word;
+						line = new_word_line.line;
 					}
 				}
 				
@@ -182,6 +176,9 @@ function jtt_textbox() constructor {
 				using parse_end_i. We only parse up to the start of the next tag, or the end of the 
 				text_string. */
 				var parse_end_i = htmlsafe_string_pos_ext("<", text_string, index);
+				
+				// For debugging purposes, we'll fill this variable with the parsable text
+				var parsable_text = string_copy(text_string, index, parse_end_i - index);
 				
 				// We subract 1 from the found value because we want our indices to be inclusive.
 				parse_end_i -= 1;
@@ -226,48 +223,31 @@ function jtt_textbox() constructor {
 				var text_toadd_length = (space_found) ? end_i - index : end_i - index + 1;
 				var text_toadd = string_copy(text_string, index, text_toadd_length);
 				text_list_add(word, text_toadd, effects, index);
-				var word_width = text_list_width(word); // note that space is added after
 				
 				/* Now we can determine if we add a word to the current line. If we found a space, or we reached the end 
 				of the string, then we can add a word to the current line. This is also where we determine line breaks. */
 				if (space_found || end_of_string) {
-					
-					var new_line_word = text_add_word(word, line, space_found, index, effects);
-					word = new_line_word.word;
-					line = new_line_word.line;
-					
-					/*
-					// determine line break
-					if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
-						/*
-						If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
-						We throw an error to force the user to change something, because our code cannot accomodate this.
-						//
-						if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
-					
-						line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
-						ds_list_add(text, line);
-						text_height += text_list_height(line); // scrolling requies whole text height
-						line = word;
-						if (space_found) text_list_add(line, " ", effects, index);
-						word = ds_list_create();
-					} else {
-						line_add_word(line, word);
-						if (space_found) text_list_add(line, " ", effects, index);
-						ds_list_clear(word);
-					}
-					*/
+					var new_word_line = text_add_word(word, line, space_found, index, effects);
+					word = new_word_line.word;
+					line = new_word_line.line;
 				}
 			}
 			index = end_i + 1;
 		}
 		
 		// add remaining line and word values
+		/* Unfortunately, I've forgotten why this works. How come we don't need to check for word
+		width and textbox width here? I have a suspicion it's because there's no situation where
+		we end up with a parial line and word at the same time. It will only be one or the other.
+		In that case, we're always adding either an empty word to a line that already fits, or a 
+		word to an empty line. The only edge case this misses, I think, is if the last word is too
+		large for the textbox to handle. I'm just going to ignore that. The user will be able to 
+		clearly see if the word is too big. */
 		if (ds_list_size(line) >  0 || ds_list_size(word) > 0) {
 			line_add_word(line, word);
 			line_remove_bookend_spaces(line);
 			ds_list_add(text, line);
-			text_height += text_list_height(line); // scrolling requies whole text height
+			text_height += text_list_height(line); // scrolling requires whole text height
 		}
 		ds_list_destroy(word);
 		
@@ -299,7 +279,7 @@ function jtt_textbox() constructor {
 					
 			line_remove_bookend_spaces(_line); // so lines neither start nor end with spaces, makes align easy
 			ds_list_add(text, _line);
-			text_height += text_list_height(_line); // scrolling requies whole text height
+			text_height += text_list_height(_line); // scrolling requires whole text height
 			_line = _word;
 			if (_space_found) text_list_add(_line, " ", _effects, _index);
 			_word = ds_list_create();
@@ -312,7 +292,7 @@ function jtt_textbox() constructor {
 		return {
 			line: _line,
 			word: _word
-		}
+		};
 	}
 	
 	/// @desc Set horizontal alignment of text.
@@ -514,6 +494,34 @@ function jtt_textbox() constructor {
 		return _commands;
 	}
 
+	/// @desc Convert strings in array to real numbers
+	args_convert_to_reals = function(args) {
+		for (var p = 0; p < array_length(args); p++) {
+			/* 
+			A key parameter value is "nc" or "no change". This will fill the slot of an
+			argument list, but make no changes. Useful for when you only want to
+			change the second parameter in an effect. If the parameter is "nc", we
+			skip over it
+			*/
+			if (args[p] == "nc") {
+				args[p] = undefined;
+			} else {
+				/*
+				Here we'll attempt to convert the parameter to a number. If we can't,
+				The user has given improper input, and we'll throw an error.
+				*/
+				try {
+					args[p] = real(args[p]);
+				} catch (err) {
+					show_debug_message(err);
+					show_error("JTT Error: Text effect param (" + string(args[p] + ") is not a real number!"), true);
+				}
+			}
+		}
+		
+		return args;
+	}
+
 	/// @desc Get new effects of given struct based on _command_arr.
 	command_apply_effects = function(_command_arr, _effects) {
 		/*
@@ -553,29 +561,8 @@ function jtt_textbox() constructor {
 				}
 			}
 			
-			// From here on, all commands only use real numbers for arguments. We'll convert them now.
-			for (var p = 0; p < array_length(_args); p++) {
-				/* 
-				A key parameter value is "nc" or "no change". This will fill the slot of an
-				argument list, but make no changes. Useful for when you only want to
-				change the second parameter in an effect. If the parameter is "nc", we
-				skip over it
-				*/
-				if (_args[p] == "nc") {
-					_args[p] = undefined;
-				} else {
-					/*
-					Here we'll attempt to convert the parameter to a number. If we can't,
-					The user has given improper input, and we'll throw an error.
-					*/
-					try {
-						_args[p] = real(_args[p]);
-					} catch (err) {
-						show_debug_message(err);
-						show_error("JTT Error: Text effect param (" + string(_args[p] + ") is not a real number!"), true);
-					}
-				}
-			}
+			// For the following commands, args will be converted to real numbers if appropriate. 
+			if (_command != "sprite") _args = args_convert_to_reals(_args);
 			
 			// movement effects
 			if (_command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
@@ -940,7 +927,6 @@ function jtt_textbox() constructor {
 	}
 
 	/// @desc Draw the textbox.
-	/// @func draw(x, y)
 	draw = function(x, y) {
 		if (global.JTT_AUTO_UPDATE) update();
 		
@@ -1010,12 +996,7 @@ function jtt_textbox() constructor {
 				// Iterate over each struct in the row to prepare for draw. 
 				for (var istruct = 0; istruct < row_size; istruct++) {
 					var text_struct = text[|irow][|istruct];
-					draw_set_font(text_struct.font);
-					draw_set_color(text_struct.draw_color);
-					draw_set_alpha(text_struct.alpha);
-					var draw_x = _x + text_struct.draw_mod_x;
-					var draw_y = _y + text_struct.draw_mod_y;
-			
+
 					/* Here we determine the alpha of a line of text when scrolling. If the text is
 					beyond the bounding value, the alpha modifier is 1. If not, it is the percentage 
 					distance between the edge and the boudning value. Note that the bottom row takes
@@ -1029,11 +1010,10 @@ function jtt_textbox() constructor {
 							alpha_scroll_mod = (box_bottom - (_y + row_height)) / scroll_fade_bound;
 						}
 					}
-					draw_set_alpha(text_struct.alpha * alpha_scroll_mod);
 			
 					// if we are not on the cursor row, we can just draw the text
 					if (irow < cursor_row) {
-						draw_text(draw_x, draw_y, text_struct.text);
+						text_struct.draw(_x, _y, alpha_scroll_mod);
 					} else {
 				
 						/* But if we are, we must check to see if the text goes beyond
@@ -1044,14 +1024,13 @@ function jtt_textbox() constructor {
 						if (str_length < _cursor_char) {
 							_cursor_char -= str_length;
 							if (str_length > 0) {
-								draw_text(draw_x, draw_y, text_struct.text);
+								text_struct.draw(_x, _y, alpha_scroll_mod);
 							}
 						} else {
 							/* Once cursor char is smaller than the struct, we draw that 
 							portion of the struct. This is the end of drawing. */ 
 							istruct = row_size;
-							var _text = string_copy(text_struct.text, 1, _cursor_char);
-							draw_text(draw_x, draw_y, _text);
+							text_struct.draw(_x, _y, alpha_scroll_mod, _cursor_char);
 						}
 					}
 					_x += text_struct.get_width();
@@ -1059,7 +1038,6 @@ function jtt_textbox() constructor {
 			}
 			_y += row_height;
 		}
-	
 		draw_set_color(original_color);
 		draw_set_alpha(original_alpha);
 		draw_set_font(original_font);

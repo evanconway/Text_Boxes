@@ -53,6 +53,7 @@ function JTT_Text() constructor {
 	text if this variable is filled.
 	*/
 	sprite = undefined;
+	sprite_scale = 1;
 	
 	// movement effects
 	position_offset_x = (has_fx) ? effects.position_offset_x : global.JTT_DEFAULT_OFFSET_X;
@@ -260,6 +261,34 @@ function JTT_Text() constructor {
 			}
 			draw_color = make_color_rgb(chromatic_r, chromatic_g, chromatic_b);
 		}
+	}
+	
+	draw = function(x, y, alpha_mod) {
+		
+		// count is how many characters in the text string we draw.
+		var _count = (argument_count > 3) ? argument[3] : string_length(text);
+		var _draw_text = string_copy(text, 1, _count);
+		
+		var original_color = draw_get_color();
+		var original_alpha = draw_get_alpha();
+		var original_font = draw_get_font();
+		
+		draw_set_font(font);
+		draw_set_color(draw_color);
+		draw_set_alpha(alpha * alpha_mod);
+		
+		x += draw_mod_x;
+		y += draw_mod_y;
+		
+		if (sprite == undefined) {
+			draw_text(x, y, _draw_text);
+		} else {
+			draw_sprite(sprite, 0, x, y);
+		}
+		
+		draw_set_color(original_color);
+		draw_set_alpha(original_alpha);
+		draw_set_font(original_font);
 	}
 }
 

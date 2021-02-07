@@ -74,7 +74,7 @@ function line_add_word(line, word) {
 	for (var i = 0; i < ds_list_size(word); i++) {
 		var last_struct = line[|ds_list_size(line) - 1];
 		var word_struct = word[|i];
-		if (jtt_text_fx_equal(last_struct, word_struct) && !jtt_text_req_ind_struct(word_struct)) {
+		if (jtt_text_fx_equal(last_struct, word_struct) && !jtt_text_req_ind_struct(word_struct) && last_struct.sprite == undefined && word_struct.sprite == undefined) {
 			last_struct.add_text(word[|i].text);
 		} else {
 			ds_list_add(line, word[|i]);
@@ -100,7 +100,7 @@ function text_list_add(list, text, effects, index) {
 	}
 	
 	var last_struct = list[|ds_list_size(list) - 1];
-	if (jtt_text_fx_equal(effects, last_struct)) {
+	if (jtt_text_fx_equal(effects, last_struct) && last_struct.sprite == undefined) {
 			last_struct.add_text(text);
 	} else {
 		ds_list_add(list, new JTT_Text(text, effects, index));
