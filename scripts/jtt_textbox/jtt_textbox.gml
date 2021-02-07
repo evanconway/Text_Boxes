@@ -1,6 +1,6 @@
 // Script assets have changed for v2.3.0 see
 // https://help.yoyogames.com/hc/en-us/articles/360005277377 for more information
-function jtt_textbox() constructor{
+function jtt_textbox() constructor {
 	text = ds_list_create(); // ds_list of ds_list of text structs (2d list)
 	text_original_string = undefined; // keep original string of set text
 	effects_default = new JTT_Text(); // effect data is stored in an unused text struct
@@ -76,19 +76,19 @@ function jtt_textbox() constructor{
 			ds_list_destroy(text[|i]);
 		}
 		ds_list_clear(text);
-		var line = ds_list_create();
-		var word = ds_list_create();
+		var line = ds_list_create(); // list of text structs
+		var word = ds_list_create(); // list of text structs
 	
 		var index = 1;
 		var total_length = string_length(text_string);
 		while (index <= total_length) {
 			/* As a design choice, end_i will always be set to the last character in 
 			the parse, INCLUSIVE. So for commands, end_i will be the the index of ">". 
-			For text, end_i will the location of the next space, the character just 
-			before the next "<", or the last character in the string.*/
-		
+			For text, end_i will be the location of the next space, the character just 
+			before the next "<", or the last character in the string. */
+			
 			var end_i = undefined;
-		
+			
 			if (string_char_at(text_string, index) == "<") {
 				end_i = htmlsafe_string_pos_ext(">", text_string, index); // recall string_pos_ext is startpos exlusive
 				if (end_i == 0) show_error("Missing >. Effect tag in set_text not closed properly!", true);
@@ -99,7 +99,7 @@ function jtt_textbox() constructor{
 				/*
 				Most commands deal with text effects, but there are some that deal with formatting, or
 				changing the lines themselves. We have to do those here, instead of in the apply effects
-				function because have access to our line data here.
+				function, because we have access to our line data here.
 				*/
 				
 				for (var i = 0; i < array_length(_command_arr); i++) {
@@ -109,8 +109,12 @@ function jtt_textbox() constructor{
 					// New line, or line break.
 					if (_command == "n") {
 						var word_width = text_list_width(word);
+						/*
+						The first if statement in this code may be wrong. I'm not sure there's ever a situation where
+						
+						*/
 						if ((ds_list_size(line) <= 0) && (ds_list_size(word) <= 0)) {
-							text_list_add(line, " ", effects, index);
+							text_list_add(line, " ", effects, index); // Wait, why do we add a space? Double check this.
 							ds_list_add(text, line);
 							line = ds_list_create();
 						} else if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
@@ -122,7 +126,7 @@ function jtt_textbox() constructor{
 						} else {
 							line_add_word(line, word);
 							line_remove_bookend_spaces(line);
-							ds_list_add(text, line)
+							ds_list_add(text, line);
 							line = ds_list_create();
 							word = ds_list_create();
 						}
@@ -130,83 +134,128 @@ function jtt_textbox() constructor{
 					
 					// Sprite
 					if (_command == "sprite") {
-						var _sprite = asset_get_index(_args[0])
+						var _sprite = asset_get_index(_args[0]);
 						if (_sprite < 0 || asset_get_type(_args[0]) != asset_sprite) {
 							show_error("JTT effect error. There is no sprite with name \"" + _args[0] + "\"", true);
 						}
 						var _sprite_struct = JTT_Text("", effects);
 						_sprite_struct.sprite = _sprite;
 						
-						// Add the sprite struct to the lines, accounting for line wrapping.
+						/*
+						Here we add the sprite struct to the 2D list of structs. For the sake of simplicity, we'll
+						always treat sprites as entire words by themselves. So to add this to the text lists, we 
+						have to first add the existing word to the text list. 
+						*/
+						
+						/*
+						if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+							/*
+							If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
+							We throw an error to force the user to change something, because our code cannot accomodate this.
+	
+							if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
+					
+							line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
+							ds_list_add(text, line);
+							text_height += text_list_height(line); // scrolling requies whole text height
+							line = word;
+							if (space_found) text_list_add(line, " ", effects, index);
+							word = ds_list_create();
+						} else {
+							line_add_word(line, word);
+							if (space_found) text_list_add(line, " ", effects, index);
+							ds_list_clear(word);
+						}
+						*/
 						
 					}
 				}
-			
-				/* Most commands deal with text effects, but there are a few that deal with text
-				formatting. We parse those here. These need to be typed much more strictly because,
-				frankly, I'm sick of writing parsing code. */
 				
-			
 				effects = command_apply_effects(_command_arr, effects);
 				//effects = command_apply_effects(command_text, effects);
 			} else {
-			
-				/* We only parse up to the start of the next tag, or the end of the text_string.
-				We subract 1 from the found value because our end_i must always be inclusive. 
-				If there is no remaining tags, we set the end of parse to the end of the string.
-				Note that we check for <= 0 because, although string_pos_ext returns 0 if no 
-				value is found, we are subtracting 1 from it. So the not found value will be
+				
+				/* Recall that at this point in the code, we're inside a loop attempting to parse text. Our
+				job here is to find the next valid word, add it to the current line, and figure out line 
+				breaks when adding words and lines to the text array. */
+				
+				/* When parsing non-command text, we first determine the end of the non-command text
+				using parse_end_i. We only parse up to the start of the next tag, or the end of the 
+				text_string. */
+				var parse_end_i = htmlsafe_string_pos_ext("<", text_string, index);
+				
+				// We subract 1 from the found value because we want our indices to be inclusive.
+				parse_end_i -= 1;
+				
+				/* If there are no remaining tags, we set the end of parse to the end of the string.
+				Note that we check for < 0 because, although string_pos_ext returns 0 if no 
+				value is found, we are subtracting 1 from it. So the "not found" value will be
 				-1. Finally, for this code, there is no situation where "<" could be at the
-				current index, so we can ignore that edge case. */
-				var parse_end_i = htmlsafe_string_pos_ext("<", text_string, index) - 1;
-				if (parse_end_i <= 0) parse_end_i = total_length;
-			
-				/* To ensure correct line breaks, we have to get all the text from index to the next space,
-				or the end of the text. We have to keep track of whether we found a space or not because 
-				we don't include spaces when checking word width for line breaks. The space must be added 
-				back once the word position is determined. Also, we start from index - 1 because the startpos 
-				parameter is exclusive. We need to be able to detect spaces by themselves. */
-			
-				/* To ensure correct line breaks, we have to get all the text from index to the next space.
-				However, we have to account for command tags between index and the next space. We know that
-				a word is not over until we've hit a space, so we will mark if the space was after 
-				parse_end_i, the start of the next tag. In which case, we will not attempt to add the word
-				to the line. Note that we start from index - 1 because the startpos parameter is exclusive. 
-				We need to be able to detect spaces by themselves.*/
+				current index, which would result in parse_end_i equaling 0. So we can ignore that
+				edge case. */
+				if (parse_end_i < 0) parse_end_i = total_length;
+				
+				/* Now we set the position of end_i. Recall from above that end_i will be set to one of
+				three places: the position of the next space, the position of character before the next
+				"<", or the position of the final character. We do that by calling string_pos_ext. Note
+				that we start from index - 1 because the startpos parameter is exclusive, but we want to
+				treat our index as inclusive. */
 				end_i = htmlsafe_string_pos_ext(" ", text_string, index - 1);
-				var space_found = (end_i > 0 && end_i <= parse_end_i) ? true : false;
+				
+				/*
+				However, recall that we only parse between index and parse_end_i. This function ignores the
+				value of parse_end_i, and so end_i could end up beyond it. We need to clean up the results
+				here. Recall that string_pos_ext returns 0 if the given character is not found:
+					1. If end_i is 0, then no space was found between index and the end of the string. This 
+					means all text between index and parse_end_i is valid, so we set end_i to equal parse_end_i.
+					2. If end_i is greater than parse_end_i, then all the text between index and parse_end_i
+					is valid, so we set end_i to equal parse_end_i.
+					3. If end_i is greater than 0, but less than or equal to parse_end_i, then its current 
+					is already correct. We make no changes. */
 				if (end_i > parse_end_i || end_i == 0) end_i = parse_end_i;
-			
-				// The text we add to the word at first must not include the space.
+				
+				/* Here we mark some flags to determine which of the three outcomes we got for end_i. Although
+				we will always add text to the current word, we will only attempt to add the word to the 
+				current line if either a space was found, or we've reached the end of the string. */
+				var space_found = (string_char_at(text_string, end_i) == " ");
+				var end_of_string = (end_i == total_length);
+				
+				/* Here we now know how much of the text string to add to the current word. But since we do not
+				include spaces when determining the pixel width of a word, we leave the final character of our
+				valid text off when we've found a space. That final character is, of course, a space. It will be
+				added back later. */
 				var text_toadd_length = (space_found) ? end_i - index : end_i - index + 1;
 				var text_toadd = string_copy(text_string, index, text_toadd_length);
-			
 				text_list_add(word, text_toadd, effects, index);
-			
-				// determine line break
 				var word_width = text_list_width(word); // note that space is added after
-				if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
-					/*
-					If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
-					We throw an error to force the user to change something, because our code cannot accomodate this.
-					*/
-					if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
+				
+				/* Now we can determine if we add a word to the current line. If we found a space, or we reached the end 
+				of the string, then we can add a word to the current line. This is also where we determine line breaks. */
+				if (space_found || end_of_string) {
+					// determine line break
+					if ((textbox_width != undefined) && ((text_list_width(line) + word_width) > textbox_width)) {
+						/*
+						If the line has no words in it, this means we've found a word so big, the textbox cannot display it.
+						We throw an error to force the user to change something, because our code cannot accomodate this.
+						*/
+						if (ds_list_size(line) <= 0) show_error("The texbox is not big enough to display the word: " + text_list_string(word), true);
 					
-					line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
-					ds_list_add(text, line);
-					text_height += text_list_height(line); // scrolling requies whole text height
-					line = word;
-					if (space_found) text_list_add(line, " ", effects, index);
-					word = ds_list_create();
-				} else {
-					line_add_word(line, word);
-					if (space_found) text_list_add(line, " ", effects, index);
-					ds_list_clear(word);
+						line_remove_bookend_spaces(line); // so lines neither start nor end with spaces, makes align easy
+						ds_list_add(text, line);
+						text_height += text_list_height(line); // scrolling requies whole text height
+						line = word;
+						if (space_found) text_list_add(line, " ", effects, index);
+						word = ds_list_create();
+					} else {
+						line_add_word(line, word);
+						if (space_found) text_list_add(line, " ", effects, index);
+						ds_list_clear(word);
+					}
 				}
 			}
 			index = end_i + 1;
 		}
-	
+		
 		// add remaining line and word values
 		if (ds_list_size(line) >  0 || ds_list_size(word) > 0) {
 			line_add_word(line, word);
@@ -215,7 +264,7 @@ function jtt_textbox() constructor{
 			text_height += text_list_height(line); // scrolling requies whole text height
 		}
 		ds_list_destroy(word);
-	
+		
 		/* When creating single line textboxes, the width and height start undefined.
 		Once we have determined the text list, we can set these values. */
 		if (textbox_width == undefined) {
@@ -223,7 +272,7 @@ function jtt_textbox() constructor{
 			textbox_height = text_list_height(text[|0]);
 		}
 	}
-
+	
 	/// @desc Set horizontal alignment of text.
 	/// @func set_text_align_h(new_align_h)
 	set_text_align_h = function(new_align_h) {
@@ -236,7 +285,7 @@ function jtt_textbox() constructor{
 		}
 		alignment_text_h = new_align_h;
 	}
-
+	
 	/// @desc Set vertical alignment of text.
 	/// @func set_text_align_v(new_align_v)
 	set_text_align_v = function(new_align_v) {
@@ -249,7 +298,7 @@ function jtt_textbox() constructor{
 		}
 		alignment_text_v = new_align_v;
 	}
-
+	
 	/// @desc Set horizontal alignment of box.
 	/// @func set_box_align_h(new_align_h)
 	set_box_align_h = function(new_align_h) {
@@ -262,7 +311,7 @@ function jtt_textbox() constructor{
 		}
 		alignment_box_h = new_align_h;
 	}
-
+	
 	/// @desc Set vertical alignment of box.
 	/// @func set_box_align_v(new_align_v)
 	set_box_align_v = function(new_align_v) {
@@ -275,7 +324,7 @@ function jtt_textbox() constructor{
 		}
 		alignment_box_v = new_align_v;
 	}
-
+	
 	/// @desc Set all alignments.
 	/// @func set_alignments(box_v, box_h, text_v, text_h)
 	set_alignments = function(box_v, box_h, text_v, text_h) {
@@ -285,7 +334,7 @@ function jtt_textbox() constructor{
 		set_text_align_h(text_h);
 		return;
 	}
-
+	
 	/// @desc Return color based on command text.
 	tb_get_color = function(new_color) {
 		var color_change = undefined;
