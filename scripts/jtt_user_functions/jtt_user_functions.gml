@@ -21,14 +21,18 @@ global.JTT_DEFAULT_SCROLL_END = 0;
 
 // default effect settings
 // entry
-global.JTT_DEFAULT_FALL_MAGNITUDE = 20;
-global.JTT_DEFAULT_FALL_INCREMENT = 0.9;
+global.JTT_DEFAULT_FALL_MAGNITUDE = 20; // the starting offset
+global.JTT_DEFAULT_FALL_INCREMENT = 0.9; // this is the percentage the offset becomes each step
+global.JTT_DEFAULT_RISE_MAGNITUDE = 20; // same as fall
+global.JTT_DEFAULT_RISE_INCREMENT = 0.9;
 global.JTT_DEFAULT_FADE_ALPHA_START = 0;
+global.JTT_DEFAULT_FADE_ALPHA_END = 1;
 global.JTT_DEFAULT_FADE_ALPHA_INCREMENT = 0.04;
 
 // everything else
 global.JTT_DEFAULT_FONT = f_jtt_default;
 global.JTT_DEFAULT_COLOR = c_white;
+global.JTT_DEFAULT_ALPHA_SET = 0.5; // set text alpha 
 global.JTT_DEFAULT_EFFECT_ENTER_MOVE = TB_EFFECT_ENTER_MOVE.NONE;
 global.JTT_DEFAULT_EFFECT_ENTER_ALPHA = TB_EFFECT_ENTER_ALPHA.NONE;
 global.JTT_DEFAULT_EFFECT_MOVE = TB_EFFECT_MOVE.NONE;

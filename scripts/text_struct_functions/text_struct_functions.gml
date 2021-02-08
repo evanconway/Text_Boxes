@@ -20,6 +20,7 @@ enum TB_EFFECT_MOVE {
 }
 
 enum TB_EFFECT_ALPHA {
+	ALPHA,
 	PULSE,
 	BLINK,
 	NONE
@@ -83,8 +84,13 @@ function JTT_Text() constructor {
 	fall_increment = (has_fx) ? effects.fall_increment : global.JTT_DEFAULT_FALL_INCREMENT;
 	fall_offset = fall_magnitude;
 	
+	rise_magnitude = (has_fx) ? effects.rise_magnitude : global.JTT_DEFAULT_RISE_MAGNITUDE;
+	rise_increment = (has_fx) ? effects.rise_increment : global.JTT_DEFAULT_RISE_INCREMENT;
+	rise_offset = rise_magnitude;
+	
 	// alpha
 	fade_alpha_start = (has_fx) ? effects.fade_alpha_start : global.JTT_DEFAULT_FADE_ALPHA_START;
+	fade_alpha_end = (has_fx) ? effects.fade_alpha_end : global.JTT_DEFAULT_FADE_ALPHA_END;
 	fade_alpha_increment = (has_fx) ? effects.fade_alpha_increment : global.JTT_DEFAULT_FADE_ALPHA_INCREMENT;
 	fade_alpha = fade_alpha_start;
 	
@@ -107,6 +113,8 @@ function JTT_Text() constructor {
 	shake_value = 0;
 	
 	// alpha effects
+	alpha_set = (has_fx) ? effects.alpha_set : global.JTT_DEFAULT_ALPHA_SET;
+	
 	pulse_alpha_max = (has_fx) ? effects.pulse_alpha_max : global.JTT_DEFAULT_PULSE_ALPHA_MAX;
 	pulse_alpha_min = (has_fx) ? effects.pulse_alpha_min : global.JTT_DEFAULT_PULSE_ALPHA_MIN;
 	pulse_increment = (has_fx) ? effects.pulse_increment : global.JTT_DEFAULT_PULSE_INCREMENT;
@@ -181,16 +189,30 @@ function JTT_Text() constructor {
 				} 
 				draw_mod_entry_y = fall_offset * -1;
 			}
+			if (effect_enter_m == TB_EFFECT_ENTER_MOVE.RISE) {
+				draw_mod_entry_x = 0;
+				rise_offset = floor(rise_offset * rise_increment);
+				if (rise_offset <= 1) { 
+					rise_offset = 0;
+				} 
+				draw_mod_entry_y = rise_offset;
+			}
 			
 			//alpha
 			if (effect_enter_a == TB_EFFECT_ENTER_ALPHA.NONE) {
 				alpha_entry = 1;
 			}
 			if (effect_enter_a == TB_EFFECT_ENTER_ALPHA.FADE) {
-				fade_alpha += fade_alpha_increment;
-				if (fade_alpha >= 1) {
-					fade_alpha = 1;
-				} 
+				if (fade_alpha_start < fade_alpha_end) fade_alpha += fade_alpha_increment;
+				else fade_alpha -= fade_alpha_increment;
+				
+				if (fade_alpha_start < fade_alpha_end && fade_alpha >= fade_alpha_end) {
+					fade_alpha = fade_alpha_end;
+				}
+				
+				if (fade_alpha_start > fade_alpha_end && fade_alpha <= fade_alpha_end) {
+					fade_alpha = fade_alpha_end;
+				}
 				alpha_entry = fade_alpha;
 			}
 		}
@@ -245,6 +267,10 @@ function JTT_Text() constructor {
 		// alpha effects
 		if (effect_a == TB_EFFECT_ALPHA.NONE) {
 			alpha = 1;
+		}
+		
+		if (effect_a == TB_EFFECT_ALPHA.ALPHA) {
+			alpha = alpha_set;
 		}
 		
 		if (effect_a == TB_EFFECT_ALPHA.PULSE) {

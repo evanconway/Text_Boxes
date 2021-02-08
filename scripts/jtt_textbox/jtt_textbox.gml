@@ -582,6 +582,14 @@ function jtt_textbox() constructor {
 				if (array_length(_args) >= 2) {
 					if (_args[1] != undefined) new_effects.fall_increment = _args[1];
 				}
+			} else if (_command == "rise") {
+				new_effects.effect_enter_m = TB_EFFECT_ENTER_MOVE.RISE;
+				if (array_length(_args) >= 1) {
+					if (_args[0] != undefined) new_effects.rise_magnitude = _args[0];
+				}
+				if (array_length(_args) >= 2) {
+					if (_args[1] != undefined) new_effects.rise_increment = _args[1];
+				}
 			}
 			// alpha effects
 			if (_command == "no_enter_alpha") new_effects.effect_enter_a = TB_EFFECT_ENTER_ALPHA.NONE;
@@ -591,7 +599,10 @@ function jtt_textbox() constructor {
 					if (_args[0] != undefined) new_effects.fade_alpha_start = _args[0];
 				}
 				if (array_length(_args) >= 2) {
-					if (_args[1] != undefined) new_effects.fade_alpha_increment = _args[1];
+					if (_args[1] != undefined) new_effects.fade_alpha_end = _args[1];
+				}
+				if (array_length(_args) >= 3) {
+					if (_args[2] != undefined) new_effects.fade_alpha_increment = _args[2];
 				}
 			}
 			
@@ -655,7 +666,12 @@ function jtt_textbox() constructor {
 			
 			// alpha effects
 			if (_command == "no_alpha") new_effects.effect_a = TB_EFFECT_ALPHA.NONE;
-			else if (_command == "pulse") {
+			else if (_command == "alpha") {
+				new_effects.effect_a = TB_EFFECT_ALPHA.ALPHA;
+				if (array_length(_args) >= 1) {
+					if (_args[0] != undefined) new_effects.alpha_set = _args[0];
+				}
+			} else if (_command == "pulse") {
 				new_effects.effect_a = TB_EFFECT_ALPHA.PULSE;
 				if (array_length(_args) >= 1) {
 					if (_args[0] != undefined) new_effects.pulse_alpha_max = clamp((_args[0]), 0, 1);
