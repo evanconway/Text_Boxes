@@ -9,10 +9,10 @@ global.JTT_DEFAULT_ALIGN_BOX_V = fa_top;
 global.JTT_DEFAULT_ALIGN_BOX_H = fa_left;
 global.JTT_DEFAULT_ALIGN_TEXT_V = fa_top;
 global.JTT_DEFAULT_ALIGN_TEXT_H = fa_left;
-global.JTT_DEFAULT_TYPING_TIME = 6; // number of updates between types
+global.JTT_DEFAULT_TYPING_TIME = 6; // number of updates between types 
 global.JTT_DEFAULT_TYPING_TIME_STOP = 40; // number of  additional updates to wait after typing end punctuation
 global.JTT_DEFAULT_TYPING_TIME_PAUSE = 15; // number of additional updates to wait after typing pause punctuation
-global.JTT_DEFAULT_TYPING_INCREMENT = 2.2; // number of chars to type when typing time reaches 1
+global.JTT_DEFAULT_TYPING_INCREMENT = 2.2; // number of chars to type when typing time reaches 1  
 global.JTT_DEFAULT_TYPING_CHIRP = undefined;
 global.JTT_DEFAULT_TYPING_CHIRP_GAIN = 0.5;
 global.JTT_DEFAULT_SCROLL_INCREMENT = 0.3; // amount to advance scroll each update
@@ -20,8 +20,17 @@ global.JTT_DEFAULT_SCROLL_FADE_BOUND = 10;
 global.JTT_DEFAULT_SCROLL_END = 0;
 
 // default effect settings
+// entry
+global.JTT_DEFAULT_FALL_MAGNITUDE = 20;
+global.JTT_DEFAULT_FALL_INCREMENT = 0.9;
+global.JTT_DEFAULT_FADE_ALPHA_START = 0;
+global.JTT_DEFAULT_FADE_ALPHA_INCREMENT = 0.04;
+
+// everything else
 global.JTT_DEFAULT_FONT = f_jtt_default;
 global.JTT_DEFAULT_COLOR = c_white;
+global.JTT_DEFAULT_EFFECT_ENTER_MOVE = TB_EFFECT_ENTER_MOVE.NONE;
+global.JTT_DEFAULT_EFFECT_ENTER_ALPHA = TB_EFFECT_ENTER_ALPHA.NONE;
 global.JTT_DEFAULT_EFFECT_MOVE = TB_EFFECT_MOVE.NONE;
 global.JTT_DEFAULT_EFFECT_ALPHA = TB_EFFECT_ALPHA.NONE;
 global.JTT_DEFAULT_EFFECT_COLOR = TB_EFFECT_COLOR.NONE;

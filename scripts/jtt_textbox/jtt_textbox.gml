@@ -571,6 +571,31 @@ function jtt_textbox() constructor {
 			// For the following commands, args will be converted to real numbers if appropriate. 
 			if (_command != "sprite") _args = args_convert_to_reals(_args);
 			
+			// ENTRY EFFECTS
+			// movement effects
+			if (_command == "no_enter_move") new_effects.effect_enter_m = TB_EFFECT_ENTER_MOVE.NONE;
+			else if (_command == "fall") {
+				new_effects.effect_enter_m = TB_EFFECT_ENTER_MOVE.FALL;
+				if (array_length(_args) >= 1) {
+					if (_args[0] != undefined) new_effects.fall_magnitude = _args[0];
+				}
+				if (array_length(_args) >= 2) {
+					if (_args[1] != undefined) new_effects.fall_increment = _args[1];
+				}
+			}
+			// alpha effects
+			if (_command == "no_enter_alpha") new_effects.effect_enter_a = TB_EFFECT_ENTER_ALPHA.NONE;
+			else if (_command == "fade") {
+				new_effects.effect_enter_a = TB_EFFECT_ENTER_ALPHA.FADE;
+				if (array_length(_args) >= 1) {
+					if (_args[0] != undefined) new_effects.fade_alpha_start = _args[0];
+				}
+				if (array_length(_args) >= 2) {
+					if (_args[1] != undefined) new_effects.fade_alpha_increment = _args[1];
+				}
+			}
+			
+			//NORMAL EFFECTS
 			// movement effects
 			if (_command == "no_move") new_effects.effect_m = TB_EFFECT_MOVE.NONE;
 			else if (_command == "offset") {
@@ -925,10 +950,19 @@ function jtt_textbox() constructor {
 			}
 		}
 	
-		// update text structs
+		// update text structs, and mark structs within cursor/row bounds as "typed"
 		for (var i = 0; i < ds_list_size(text); i++) {
+			var _chars = 0;
 			for (var k = 0; k < ds_list_size(text[|i]); k++) {
-				text[|i][|k].update();
+				var _t = text[|i][|k];
+				if (i < cursor_row) {
+					_t.typed = true;
+				} 
+				if (i == cursor_row) {
+					_chars += string_length(_t.text);
+					if (_chars <= cursor) _t.typed = true;
+				}
+				_t.update();
 			}
 		}
 	}

@@ -15,7 +15,7 @@ display_reset(0, true);
 state = 0;
 
 global.JTT_DEFAULT_TYPING_CHIRP = snd_textbox_default;
-textbox = jtt_create_box_typing_gui(0, 0, res, res);
+textbox = jtt_create_box_typing(400, 400);
 textbox.set_text("I'm the first text. Notice how I appear to line wrap correctly.");
 
 show_debug_message("Fits one page: " + string(textbox.get_fits_onepage()));

@@ -1,4 +1,15 @@
 
+enum TB_EFFECT_ENTER_MOVE {
+	FALL,
+	RISE,
+	NONE
+}
+
+enum TB_EFFECT_ENTER_ALPHA {
+	FADE,
+	NONE
+}
+
 enum TB_EFFECT_MOVE {
 	OFFSET,
 	WAVE,
@@ -44,7 +55,18 @@ function JTT_Text() constructor {
 	effect_m = (has_fx) ? effects.effect_m : global.JTT_DEFAULT_EFFECT_MOVE;
 	effect_a = (has_fx) ? effects.effect_a : global.JTT_DEFAULT_EFFECT_ALPHA;
 	effect_c = (has_fx) ? effects.effect_c : global.JTT_DEFAULT_EFFECT_COLOR;
+	effect_enter_m = (has_fx) ? effects.effect_enter_m : global.JTT_DEFAULT_EFFECT_ENTER_MOVE;
+	effect_enter_a = (has_fx) ? effects.effect_enter_a : global.JTT_DEFAULT_EFFECT_ENTER_ALPHA;
 	alpha = 1;
+	
+	// other modifier values for entry effects
+	draw_mod_entry_x = 0;
+	draw_mod_entry_y = 0;
+	alpha_entry = 1; // note that this value is multiplied with the end alpha, not replaces.
+	
+	/* This flag is set true by the typing code in the textbox. It determines whether the entry
+	effects should be updated. */
+	typed = false;
 	
 	/*
 	Although we're calling these "text" structs, they have the ability to display sprites.
@@ -55,6 +77,18 @@ function JTT_Text() constructor {
 	sprite = undefined;
 	sprite_scale = 1;
 	
+	// ENTRY EFFECTS
+	// movement
+	fall_magnitude = (has_fx) ? effects.fall_magnitude : global.JTT_DEFAULT_FALL_MAGNITUDE;
+	fall_increment = (has_fx) ? effects.fall_increment : global.JTT_DEFAULT_FALL_INCREMENT;
+	fall_offset = fall_magnitude;
+	
+	// alpha
+	fade_alpha_start = (has_fx) ? effects.fade_alpha_start : global.JTT_DEFAULT_FADE_ALPHA_START;
+	fade_alpha_increment = (has_fx) ? effects.fade_alpha_increment : global.JTT_DEFAULT_FADE_ALPHA_INCREMENT;
+	fade_alpha = fade_alpha_start;
+	
+	// NORMAL EFFECTS
 	// movement effects
 	position_offset_x = (has_fx) ? effects.position_offset_x : global.JTT_DEFAULT_OFFSET_X;
 	position_offset_y = (has_fx) ? effects.position_offset_y : global.JTT_DEFAULT_OFFSET_Y;
@@ -132,6 +166,36 @@ function JTT_Text() constructor {
 	
 	update = function() {
 		
+		// ENTRY EFFECTS	
+		if (typed) {
+			// movement
+			if (effect_m == TB_EFFECT_ENTER_MOVE.NONE) {
+				draw_mod_entry_x = 0;
+				draw_mod_entry_y = 0;
+			}
+			if (effect_enter_m == TB_EFFECT_ENTER_MOVE.FALL) {
+				draw_mod_entry_x = 0;
+				fall_offset = floor(fall_offset * fall_increment);
+				if (fall_offset <= 1) { 
+					fall_offset = 0;
+				} 
+				draw_mod_entry_y = fall_offset * -1;
+			}
+			
+			//alpha
+			if (effect_enter_a == TB_EFFECT_ENTER_ALPHA.NONE) {
+				alpha_entry = 1;
+			}
+			if (effect_enter_a == TB_EFFECT_ENTER_ALPHA.FADE) {
+				fade_alpha += fade_alpha_increment;
+				if (fade_alpha >= 1) {
+					fade_alpha = 1;
+				} 
+				alpha_entry = fade_alpha;
+			}
+		}
+		
+		// NORMAL EFFECTS	
 		// movement effects
 		if (effect_m == TB_EFFECT_MOVE.NONE) {
 			draw_mod_x = 0;
@@ -261,6 +325,7 @@ function JTT_Text() constructor {
 			}
 			draw_color = make_color_rgb(chromatic_r, chromatic_g, chromatic_b);
 		}
+		
 	}
 	
 	draw = function(x, y, alpha_mod) {
@@ -275,16 +340,18 @@ function JTT_Text() constructor {
 		
 		draw_set_font(font);
 		draw_set_color(draw_color);
-		draw_set_alpha(alpha * alpha_mod);
+		draw_set_alpha(alpha * alpha_entry * alpha_mod);
 		
 		x += draw_mod_x;
 		y += draw_mod_y;
 		
+		x += draw_mod_entry_x;
+		y += draw_mod_entry_y;
+		
 		if (sprite == undefined) {
 			draw_text(x, y, _draw_text);
 		} else {
-			draw_sprite_ext(sprite, 0, x, y, sprite_scale, sprite_scale, 0, -1, alpha * alpha_mod);
-			//draw_sprite(sprite, 0, x, y);
+			draw_sprite_ext(sprite, 0, x, y, sprite_scale, sprite_scale, 0, -1, alpha * alpha_entry * alpha_mod);
 		}
 		
 		draw_set_color(original_color);
@@ -297,6 +364,8 @@ function JTT_Text() constructor {
 function jtt_text_req_ind_struct(text_struct) {
 	if (text_struct.effect_m == TB_EFFECT_MOVE.SHAKE) return true;
 	if (text_struct.effect_m == TB_EFFECT_MOVE.WAVE) return true;
+	if (text_struct.effect_enter_m != TB_EFFECT_ENTER_MOVE.NONE) return true;
+	if (text_struct.effect_enter_a != TB_EFFECT_ENTER_ALPHA.NONE) return true;
 	return false;
 }
 
