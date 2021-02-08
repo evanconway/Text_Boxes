@@ -58,19 +58,11 @@ global.JTT_DEFAULT_CHROMATIC_MAX = 255; // max rgb value for each color red, gre
 global.JTT_DEFAULT_CHROMATIC_MIN = 0 ; // min rgb value for each color red, green, blue
 global.JTT_DEFAULT_CHROMATIC_INCREMENT = 5; // change in rgb each update
 
-/// @func jtt_create_label(text)
-function jtt_create_label(text) {
+/// @func jtt_create_box(*width, *height, *text)
+function jtt_create_box() {
 	var result = new jtt_textbox();
-	result.set_text(text); // width and height are automatically set here
-	result.advance();
-	return result;
-}
-
-/// @func jtt_create_box(width, height, *text)
-function jtt_create_box(width, height) {
-	var result = new jtt_textbox();
-	result.textbox_width = width;
-	result.textbox_height = height;
+	result.textbox_width = (argument_count > 0) ? argument[0] : undefined;
+	result.textbox_height = (argument_count > 1) ? argument[1] : undefined;
 	if ((argument_count > 2) && (is_string(argument[2]))) {
 		result.set_text(argument[2]);
 		if (global.JTT_ADVANCE_ON_CREATE) {
@@ -80,9 +72,11 @@ function jtt_create_box(width, height) {
 	return result;
 }
 
-/// @func jtt_create_box_typing(width, height, *text)
-function jtt_create_box_typing(_width, _height) {
-	var result = jtt_create_box(_width, _height);
+/// @func jtt_create_box_typing(*width, *height, *text)
+function jtt_create_box_typing() {
+	var result = new jtt_textbox();
+	result.textbox_width = (argument_count > 0) ? argument[0] : undefined;
+	result.textbox_height = (argument_count > 1) ? argument[1] : undefined;
 	result.type_on_nextpage = false;
 	if ((argument_count > 2) && (argument[2] != undefined)) {
 		result.set_text(argument[2]);
@@ -94,8 +88,10 @@ function jtt_create_box_typing(_width, _height) {
 }
 
 /// @func jtt_create_box_scrolling(width, height, *text)
-function jtt_create_box_scrolling(width, _height) {
-	var result = jtt_create_box(width, _height);
+function jtt_create_box_scrolling(width, height) {
+	var result = new jtt_textbox();
+	result.textbox_width = width;
+	result.textbox_height = height;
 	result.textbox_display_mode = 1;
 	if ((argument_count > 2) && (argument[2] != undefined)) {
 		result.set_text(argument[2]);

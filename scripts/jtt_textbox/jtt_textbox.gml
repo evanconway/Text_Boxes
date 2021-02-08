@@ -258,11 +258,27 @@ function jtt_textbox() constructor {
 		}
 		ds_list_destroy(word);
 		
-		/* When creating single line textboxes, the width and height start undefined.
-		Once we have determined the text list, we can set these values. */
+		/* If width or height are not defined, we set them to the width/height of the text.
+		This helps keep our textboxes adaptable so that the width or height can expand to what we
+		need. Note that we always redefine height if width is not defined. Although this behavior
+		is possible, it involves changing some other elements of our code, and I honestly just
+		can't be bothered. */
 		if (textbox_width == undefined) {
-			textbox_width = text_list_width(text[|0]);
-			textbox_height = text_list_height(text[|0]);
+			textbox_width = 0;
+			textbox_height = 0;
+			for (var i = 0; i < ds_list_size(text); i++) {
+				textbox_height += text_list_height(text[|i]);
+				var _list_width = text_list_width(text[|i])
+				if (_list_width > textbox_width) {
+					textbox_width = _list_width;
+				}
+			}
+		}
+		if (textbox_height == undefined) {
+			textbox_height = 0;
+			for (var i = 0; i < ds_list_size(text); i++) {
+				textbox_height += text_list_height(text[|i]);
+			}
 		}
 	}
 	
@@ -759,7 +775,7 @@ function jtt_textbox() constructor {
 			var checking = true;
 			while (checking && (row_i_end < (ds_list_size(text) - 1))) {
 				var next_height = text_list_height(text[|(row_i_end + 1)]);
-				if ((page_height + next_height) < textbox_height) {
+				if ((page_height + next_height) <= textbox_height) {
 					row_i_end += 1;
 					page_height += next_height;
 					text_height += next_height;
